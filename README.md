@@ -3,7 +3,26 @@
 A curated collection of agent skills for operating Kestra environments.
 
 
-## Available skill
+## Available skills
+
+### kestra-flow
+
+Generate, modify, or debug Kestra Flow YAML grounded in the live flow schema — the same way the Kestra AI Copilot does.
+
+**Use when:**
+- Generating a new Kestra flow from a description
+- Modifying or extending an existing flow
+- Debugging invalid YAML or incorrect task/trigger references
+
+**Covers:**
+- Fetching the live flow schema from `https://api.kestra.io/v1/plugins/schemas/flow`
+- Schema-validated task and trigger generation
+- Partial modification (touch only the relevant part)
+- Guardrails: no invented types, no hardcoded secrets, correct looping and trigger patterns
+
+Skill path: `skills/kestra-flow/SKILL.md`
+
+---
 
 ### kestra-ops
 
@@ -30,6 +49,10 @@ Load the skill and provide a concrete operational objective.
 Examples:
 
 ```text
+Use kestra-flow to write a flow that polls a REST API every 30 minutes and stores the result in KV store.
+```
+
+```text
 Use kestra-ops to validate and deploy all flows in ./flows to prod.namespace with fail-fast.
 ```
 
@@ -43,6 +66,8 @@ Use kestra-ops to run my-flow in my.namespace, wait for completion, and summariz
 .
 ├── README.md
 └── skills/
+    ├── kestra-flow/
+    │   └── SKILL.md
     └── kestra-ops/
         └── SKILL.md
 ```
