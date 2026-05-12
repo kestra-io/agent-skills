@@ -42,6 +42,26 @@ Operate Kestra using `kestractl` for flow, execution, namespace, and namespace-f
 
 Skill path: `skills/kestra-ops/SKILL.md`
 
+---
+
+### migrate-airflow-kestra
+
+Migrate an **Apache Airflow** DAG to a production-ready **Kestra** flow.
+
+**Use when:**
+- Converting an Airflow DAG (`.py`) to a Kestra flow YAML
+- Translating `@task`-decorated functions or operators into Kestra tasks
+- Preserving Airflow parallel execution (fan-out/fan-in) in Kestra
+
+**Covers:**
+- Reading and analysing the Airflow DAG structure, tasks, and dependencies
+- Fetching the live Kestra schema from `https://api.kestra.io/v1/plugins/schemas/flow`
+- Extracting Python business logic into namespace files
+- Generating schema-validated Kestra flow YAML with correct task ordering and parallelism
+- Mapping Airflow XCom data passing to Kestra `outputFiles`/`inputFiles`
+
+Skill path: `skills/migrate-airflow-kestra/SKILL.md`
+
 ## Usage
 
 Load the skill and provide a concrete operational objective.
@@ -60,6 +80,10 @@ Use kestra-ops to validate and deploy all flows in ./flows to prod.namespace wit
 Use kestra-ops to run my-flow in my.namespace, wait for completion, and summarize the result.
 ```
 
+```text
+Use migrate-airflow-kestra to migrate dags/ingest_pipeline.py from Airflow to Kestra, output to kestra/.
+```
+
 ## Structure
 
 ```
@@ -68,7 +92,9 @@ Use kestra-ops to run my-flow in my.namespace, wait for completion, and summariz
 └── skills/
     ├── kestra-flow/
     │   └── SKILL.md
-    └── kestra-ops/
+    ├── kestra-ops/
+    │   └── SKILL.md
+    └── migrate-airflow-kestra/
         └── SKILL.md
 ```
 
