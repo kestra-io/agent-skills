@@ -24,6 +24,26 @@ Skill path: `skills/kestra-flow/SKILL.md`
 
 ---
 
+### kestra-flow-hardening
+
+Audit existing Kestra flows and add production-hardening controls — the consulting counterpart to `kestra-flow`.
+
+**Use when:**
+- Hardening one or more flows for production
+- Auditing flows for resilience, idempotency, and guardrail gaps
+- Adding retries, timeouts, error handling, concurrency limits, SLAs, or idempotency guards
+
+**Covers:**
+- Severity-ranked audit report (Critical / High / Medium / Low) with risk, caveat, and proposed fix per finding
+- Idempotency judgment — never recommends a blind retry on a non-idempotent write; flags the dedup-guard vs. retry-if-safe branches
+- Proportional auditing calibrated by flow signals (triggers, side-effects, namespace env); "already sound" is a valid result
+- Surgical, schema-validated edits applied on confirmation, inline and structure-preserving
+- Version- and edition-aware (OSS / EE), with EE-only patterns labeled and given an OSS fallback
+
+Skill path: `skills/kestra-flow-hardening/SKILL.md`
+
+---
+
 ### kestra-ops
 
 Operate Kestra using `kestractl` for flow, execution, namespace, and namespace-file operations.
@@ -92,6 +112,10 @@ Use migrate-airflow-kestra to migrate dags/ingest_pipeline.py from Airflow to Ke
 └── skills/
     ├── kestra-flow/
     │   └── SKILL.md
+    ├── kestra-flow-hardening/
+    │   ├── SKILL.md
+    │   └── references/
+    │       └── hardening-patterns.md
     ├── kestra-ops/
     │   └── SKILL.md
     └── migrate-airflow-kestra/
