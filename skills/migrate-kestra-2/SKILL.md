@@ -45,18 +45,20 @@ CLI mechanics (flags, output parsing, kestractl fallback commands): [references/
 
    | flow | state | notes |
    |---|---|---|
-   | `<namespace>.<id>` | `clean` \| `auto-migrated` \| `rewritten-confirmed` \| `deferred(reason)` \| `validated` \| `deployed` | pattern classes, decisions, accepted risks |
+   | `<namespace>.<id>` | `clean` \| `auto-migrated` \| `rewritten-confirmed` \| `deferred(reason)` \| `validated` \| `deployed` \| `held(reason)` | pattern classes, decisions, accepted risks |
 
 4. **Auto-migrate**: `kestra-migrate -o v2-flows/ <dir>`, capturing stderr warnings (ANSI-stripped) into the ledger.
 5. **Guided migration**, hybrid granularity:
    - **Batch pass** for mechanical classes — apply across all affected flows at once: `json()` → `fromJson()`, Pebble `version=` → `revision=`, `fromIon()` wrapping, `checks[].condition` → `when`. Table in [references/removed-constructs.md](references/removed-constructs.md).
-   - **Flow-by-flow** for structural classes — each rewrite is presented as a diff with reasoning and its migration-guide link, applied on the user's confirmation. Ground rewrites in the live flow schema (via the kestra-flow skill when installed):
+   - **Flow-by-flow** for structural classes — each rewrite is presented as a diff with reasoning and its migration-guide link, applied on the user's confirmation. Ground rewrites in the 2.0 target's flow schema (see Composition):
      - `ForEach`/`ForEachItem`/`EachSequential`/`EachParallel` → [references/foreach-to-loop.md](references/foreach-to-loop.md)
      - trigger `conditions`/`preconditions` → [references/trigger-conditions.md](references/trigger-conditions.md)
      - `pluginDefaults` → [references/plugin-defaults.md](references/plugin-defaults.md)
      - removed types with no direct replacement → [references/removed-constructs.md](references/removed-constructs.md); implement the documented alternative on confirmation, or mark the flow `deferred(reason)` in the ledger.
 6. **Validate** against a real 2.0 instance: `kestractl flows validate v2-flows/ --output json`. Triage failures per cli-reference. Validation needs a 2.0 endpoint — if none exists yet, the server upgrade (Phase 3, side-by-side provisioning) comes first.
 7. **Deploy on confirmation**: `kestractl flows deploy v2-flows/ --override` to the 2.0 target — staging namespace/instance first when one exists. Update ledger rows to `deployed`.
+
+   With two instances live, every validate/deploy carries explicit target flags — kestractl has no `--context` flag (cli-reference §Targeting an instance).
 
 **Sequencing by the audit's Target answer:**
 
@@ -69,18 +71,21 @@ CLI mechanics (flags, output parsing, kestractl fallback commands): [references/
 
 Full sequence, Docker Compose and Kubernetes recipes, EE/OSS branches, rollback constraints: [references/server-upgrade.md](references/server-upgrade.md).
 
-The skeleton: verify ≥ 1.3.0 → **verified backup** (the one-way door) → stop all instances → `kestra migrate plan` then `kestra migrate run` with the 2.0 binary (EE must run it manually; OSS auto-migrates on startup) → image/chart bump → start.
+Two paths by the audit's Target answer:
 
-**Done when:** the 2.0 server is running, `kestra migrate plan` reports nothing pending, workers show a successful controller handshake (gRPC port 50051), and — in-place path — the migrated flows are deployed.
+- **In-place** (the one-way door): verify ≥ 1.3.0 → **verified backup** → stop all instances → `kestra migrate plan` then `kestra migrate run` with the 2.0 binary (EE must run it manually; OSS auto-migrates on startup) → image/chart bump → start.
+- **Side-by-side**: provision a fresh 2.0 instance on a fresh, empty database while v1 keeps running — the one-way door stays shut, and rollback is "keep using v1" (server-upgrade §Side-by-side path).
+
+**Done when:** the 2.0 server is running, migrations are verified complete — `kestra migrate plan` reports nothing pending, or (no exec access / OSS auto-migrate) startup logs show every `MigrationRunner` migration applied and none pending or failed — workers show a successful controller handshake (gRPC port 50051), and — in-place path — the migrated flows are deployed.
 
 ## Phase 4 — Verify
 
-1. Every ledger row `deployed` executes or is explicitly held by the user.
-2. Run the **smoke-test checklist** for silent behavior changes (generated into the ledger during Phase 2): `fs.local.Delete` recursive default flip, ION binary `read()`, Flow-trigger default states losing `PAUSED`, `trigger.outputs` flowId scoping.
+1. Every ledger row `deployed` executes (commands: cli-reference §executions) or lands in an explicit `held(reason)`: disabled flows (the server refuses manual runs — hold as-is), input-requiring flows (run with user-supplied test inputs, or hold), trigger-only flows (verify on the next natural fire, or hold as accepted risk). Every hold is the user's call, recorded in the ledger.
+2. Run the **smoke-test checklist** for silent behavior changes (generated into the ledger during Phase 2): `fs.local.Delete` recursive default flip, ION binary `read()`, Flow-trigger default states losing `PAUSED`, `trigger.outputs` flowId scoping, `dependsOn` gating probe.
 3. EE: verify migrated RBAC roles (action model) and re-grant dropped `IMPERSONATE`/`TEMPLATE` permissions; review auto-migrated Policies.
 
 **Done when:** smoke checklist items are each confirmed or logged as accepted risk in the ledger, and the user has declared cutover complete.
 
 ## Composition
 
-Prefer the sibling skills when installed: **kestra-ops** for every kestractl operation (contexts, export, validate, deploy), **kestra-flow** for schema-grounded YAML rewriting. Standalone fallback: the exact commands inlined in [references/cli-reference.md](references/cli-reference.md) plus the flow schema at `https://api.kestra.io/v1/plugins/schemas/flow`.
+Prefer the sibling skills when installed: **kestra-ops** for every kestractl operation (contexts, export, validate, deploy), **kestra-flow** for schema-grounded YAML rewriting — with one override: kestra-flow predates 2.0 (it still suggests `ForEach` and the public schema), so this skill's pattern references win wherever they disagree. Ground 2.0 rewrites in the live target's own schema: `GET <2.0-host>/api/v1/plugins/schemas/flow` (tenant-less path) — the public `api.kestra.io` schema tracks 1.x and validates removed constructs. Standalone fallback: the exact commands inlined in [references/cli-reference.md](references/cli-reference.md).

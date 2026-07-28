@@ -11,7 +11,7 @@ For each, present the alternative with its doc link; implement on confirmation o
 | `core.trigger.Toggle` | enable/disable triggers via the API or SDK |
 | Listeners | separate flows with Flow triggers (`dependsOn` the listened flow) |
 | `git.Push` | `git.SyncFlows` or Git API tasks |
-| `scripts.nashorn.Eval` / `FileTransform` | GraalJS (`scripts.graaljs.*`) or another script task |
+| `scripts.nashorn.Eval` / `FileTransform` | GraalVM: `io.kestra.plugin.graalvm.js.Eval` / `graalvm.js.FileTransform` (jython → `graalvm.python.*`) |
 | `runner:` property | `taskRunner:` with `docker.image` → `containerImage` |
 | `windowAdvance` (Flow trigger) | none — discuss intent, usually `deferred` |
 | EE `TEMPLATE` permissions | dropped silently — nothing to grant |
@@ -38,5 +38,6 @@ Silent behavior changes that parse fine and only show up at runtime:
 - [ ] `fs.local.Delete` directory deletions still remove what they should (`recursive` intent confirmed)
 - [ ] Expressions reading ION outputs produce correct values (`fromIon` wrapping)
 - [ ] Flow triggers that depended on `PAUSED` upstream states declare it explicitly
+- [ ] Migrated Flow triggers (`dependsOn`) gate correctly — controlled probe: run ONE upstream (assert no fire), then all upstreams inside the window (assert exactly one fire), then an unrelated flow in the namespace (assert no fire). If gating is not enforced — observed on a 2.0.0-SNAPSHOT build firing on every namespace flow completion — disable the trigger, record the accepted risk in the ledger, and report the bug upstream
 - [ ] Multi-flow trigger consumers read `trigger.outputs.<flowId>.<key>` (scoped shape)
 - [ ] EE: auto-migrated Policies reviewed; `USER: IMPERSONATE` re-granted where needed

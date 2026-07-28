@@ -7,9 +7,9 @@ Detect first, ask the rest. Produce a readiness report the team can share, with 
 | Probe | Command | Feeds |
 |---|---|---|
 | Migration CLI present | `kestra-migrate --version` (install: `curl -fsSL https://raw.githubusercontent.com/kestra-io/kestra2-flow-migration/main/install-scripts/install.sh \| bash`) | readiness checklist |
-| kestractl present + contexts | `kestractl --version`; `kestractl config show` | readiness checklist |
-| Instance reachable, version, edition | `kestractl flows list --namespace <any>` against the context; UI footer or `/api/v1/main/configs` | topology |
-| Flow inventory | `kestractl flows list` per namespace → counts | complexity evidence |
+| kestractl present + contexts | `kestractl version`; `kestractl config show` | readiness checklist |
+| Instance reachable, version, edition | `GET <host>/api/v1/configs` (tenant-less path) → `version` + `edition` | topology |
+| Flow inventory | `kestractl flows list <namespace>` (positional) → counts; hard-fails on legacy aliases like `ENUM` — raw-API fallback in cli-reference.md §Field gotchas | complexity evidence |
 | Flow triage | export flows locally, then `kestra-migrate --check <dir>` → N/M need migration + warning classes | complexity evidence |
 | Blind-spot greps | see cli-reference.md §Blind spots | complexity evidence |
 

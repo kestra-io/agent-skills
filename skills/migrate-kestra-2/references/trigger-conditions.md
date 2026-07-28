@@ -68,6 +68,7 @@ triggers:                                  triggers:
 ## Warn — no equivalent or silent change
 
 - `windowAdvance` — removed with **no direct equivalent**; discuss intent with the user and mark `deferred` if it can't be expressed.
+- Verify `dependsOn` gating with the controlled probe (removed-constructs.md §Smoke-test) before trusting a migrated trigger — a 2.0.0-SNAPSHOT build was observed firing on **every** namespace flow completion, ignoring `flowId` and `states` (even FAILED). Until the probe passes, deploy the trigger `disabled: true`.
 - Flow-trigger default `states` lost `PAUSED` — flows relying on it must add `states: [SUCCESS, WARNING, PAUSED]` explicitly (smoke-test item).
 - `trigger.outputs.<key>` → `trigger.outputs.<flowId>.<key>` for multi-entry `dependsOn` (single-entry keeps the unscoped shorthand).
 - Input-rendering failures on Flow triggers now create a FAILED execution instead of silently dropping the event.
