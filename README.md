@@ -64,6 +64,27 @@ Skill path: `skills/kestra-ops/SKILL.md`
 
 ---
 
+### migrate-kestra-2
+
+Guide a full **Kestra 1.3 → 2.0** migration: pre-flight audit, server upgrade, CLI-first flow migration, and guided rewrites of the patterns the CLI can't automate.
+
+**Use when:**
+- Upgrading or migrating an instance to Kestra 2.0
+- Checking whether an instance is ready for 2.0 (readiness report + complexity rating)
+- Triaging `kestra-migrate` warnings or flows failing to parse after a 2.0 upgrade
+
+**Covers:**
+- Detect-first audit (probes CLIs, contexts, instance, runs `kestra-migrate --check`) with a shareable readiness report and Low/Medium/High/Critical complexity tier
+- Advisory one-way-door guardrails: verified backup before upgrade (2.0 drops JDBC queue tables irreversibly), accepted risks recorded, never blocked
+- CLI-first flow migration with a persistent `migration-ledger.md` — every flow driven to a terminal state (validated/deployed or deferred-with-reason)
+- Guided per-pattern rewrites with diff + confirmation: `ForEach`/`ForEachItem` → `Loop`, trigger `conditions` → `when`/`dependsOn`, `pluginDefaults` → Policies/inline, removed types
+- Server upgrade sequences for Docker Compose and Kubernetes/Helm, EE/OSS branches, `kestra migrate plan/run` handling
+- Composes with `kestra-ops` and `kestra-flow` when installed; standalone kestractl fallback inlined
+
+Skill path: `skills/migrate-kestra-2/SKILL.md`
+
+---
+
 ### migrate-airflow-kestra
 
 Migrate an **Apache Airflow** DAG to a production-ready **Kestra** flow.
@@ -118,8 +139,18 @@ Use migrate-airflow-kestra to migrate dags/ingest_pipeline.py from Airflow to Ke
     │       └── hardening-patterns.md
     ├── kestra-ops/
     │   └── SKILL.md
-    └── migrate-airflow-kestra/
-        └── SKILL.md
+    ├── migrate-airflow-kestra/
+    │   └── SKILL.md
+    └── migrate-kestra-2/
+        ├── SKILL.md
+        └── references/
+            ├── audit.md
+            ├── cli-reference.md
+            ├── foreach-to-loop.md
+            ├── plugin-defaults.md
+            ├── removed-constructs.md
+            ├── server-upgrade.md
+            └── trigger-conditions.md
 ```
 
 ## Contributing
