@@ -29,11 +29,11 @@ Routing is complete when you have named the route to the user and they've confir
 
 Full procedure, interview script, complexity tiers, and report template: [references/audit.md](references/audit.md).
 
-The shape: **detect first, ask the rest**. Probe what a machine can know (binaries, kestractl contexts, instance version/edition, flow counts, `kestra-migrate --check` triage), then interview the user only on what it can't (topology, flow source of truth, safety, target, integrations, timeline). One instance per run — for fleets, recommend starting with staging and re-running per instance.
+The shape: **ask access, confirm the probe plan, then detect first, ask the rest**. Access (instance URL, auth method, tenant) is always asked — the user sees where the agent points before anything runs. Then probe what a machine can know (binaries, kestractl contexts, instance version/edition, flow counts, `kestra-migrate --check` triage), and interview the user only on what it can't (topology, flow source of truth, safety, target, integrations, timeline). One instance per run — for fleets, recommend starting with staging and re-running per instance.
 
 The advisory guardrail lives here: if no verified backup exists, tell the user to take and verify one before any upgrade step, explain the one-way door, and — if they choose to proceed anyway — record it in the report's risk register as an explicitly accepted risk.
 
-**Done when:** the readiness report is written to disk, every interview area is answered or detection-skipped, and a complexity tier (Low/Medium/High/Critical) is assigned with cited evidence.
+**Done when:** the access answers were confirmed by the user before the first probe, the readiness report is written to disk, every interview area is answered or detection-skipped, and a complexity tier (Low/Medium/High/Critical) is assigned with cited evidence.
 
 ## Phase 2 — Flow migration
 
