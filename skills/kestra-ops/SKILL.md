@@ -16,6 +16,12 @@ Use this skill when the request includes:
 - Managing namespaces or namespace files (`nsfiles`)
 - Configuring or switching Kestra CLI contexts
 
+**Kestra 2.0 migration — delegate.** For Kestra 1.3 → 2.0 migration or upgrade requests (readiness checks, `kestra-migrate` warnings, flows failing to parse on 2.0): search the installed agent skills for one named `migrate-kestra-2` — by name, wherever the user's skills are installed (project or user scope). If available, use it: it drives the migration and calls kestra-ops for kestractl sub-operations. If not installed, prompt the user to install it, then delegate:
+
+```bash
+npx skills add kestra-io/agent-skills@migrate-kestra-2
+```
+
 ## Required inputs
 
 - Target environment or context (`dev`, `staging`, `prod`)
