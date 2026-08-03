@@ -81,8 +81,6 @@ Guide a full **Kestra 1.3 → 2.0** migration: pre-flight audit, server upgrade,
 - Server upgrade sequences for Docker Compose and Kubernetes/Helm, EE/OSS branches, `kestra migrate plan/run` handling
 - Composes with `kestra-ops` and `kestra-flow` when installed (discovered by skill name — install via `npx skills add kestra-io/agent-skills@<name>`); standalone kestractl fallback inlined
 
-Skill path: `skills/migrate-kestra-2/SKILL.md`
-
 ---
 
 ### migrate-airflow-kestra
