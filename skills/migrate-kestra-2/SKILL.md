@@ -49,7 +49,7 @@ CLI mechanics (flags, output parsing, kestractl fallback commands): [references/
 
 4. **Auto-migrate**: `kestra-migrate -o v2-flows/ <dir>`, capturing stderr warnings (ANSI-stripped) into the ledger.
 5. **Guided migration**, hybrid granularity:
-   - **Batch pass** for mechanical classes — apply across all affected flows at once: `json()` → `fromJson()`, Pebble `version=` → `revision=`, `fromIon()` wrapping, `checks[].condition` → `when`. Table in [references/removed-constructs.md](references/removed-constructs.md).
+   - **Batch pass** for mechanical classes — apply across all affected flows at once: `json()` → `fromJson()`, Pebble `version=` → `revision=`, `fromIon()` wrapping, `checks[].condition` → `when`. Table in [references/removed-constructs.md](references/removed-constructs.md). These only apply to flow code, be careful to not edit Python/JS code embedded that might use `json()` syntax.
    - **Flow-by-flow** for structural classes — each rewrite is presented as a diff with reasoning and its migration-guide link, applied on the user's confirmation. Ground rewrites in the 2.0 target's flow schema (see Composition):
      - `ForEach`/`ForEachItem`/`EachSequential`/`EachParallel` → [references/foreach-to-loop.md](references/foreach-to-loop.md)
      - trigger `conditions`/`preconditions` → [references/trigger-conditions.md](references/trigger-conditions.md)
