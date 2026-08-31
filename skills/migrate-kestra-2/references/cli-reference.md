@@ -41,6 +41,8 @@ grep -rln 'json('            <dir>   # json() Pebble function — removed; fromJ
 grep -rln 'pluginDefaults:'  <dir>   # pluginDefaults block — fails to parse on 2.0
 ```
 
+These sweeps target **Kestra flow code — Pebble expressions inside `{{ … }}`**, not embedded language code. Ignore matches from Python/JS/etc. in Script or Commands tasks (e.g. `response.json()`, `json.dumps()`); those are the host language, not the removed Pebble function, and don't need `fromJson()`.
+
 Also worth sweeping (silent behavior changes no tool flags): `fs.local.Delete` on directories without `recursive:`, `read(` on ION outputs followed by string operations, Flow triggers relying on `PAUSED` in default states.
 
 ## kestractl (export / validate / deploy)
