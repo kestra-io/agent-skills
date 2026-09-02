@@ -70,6 +70,25 @@ Skill path: `skills/kestra-ops/SKILL.md`
 
 ---
 
+### kestra-cicd
+
+Scaffold a GitOps CI/CD pipeline that validates flows on PR/MR and deploys on merge, wrapping `kestractl` — the "automate the operating" companion to `kestra-ops`.
+
+**Use when:**
+- Setting up CI/CD or GitOps for Kestra flows
+- Generating a GitHub Actions or GitLab CI pipeline that validates on PR and deploys on merge
+- Wiring per-environment namespaces with a manual gate before production
+
+**Covers:**
+- `references/github-actions.md` — raw-`kestractl` workflow + an official-`kestra-io/github-actions` variant
+- `references/gitlab-ci.md` — `.gitlab-ci.yml` with MR validation and manual staging/prod gates
+- Secrets via the CI secret store only, pinned `kestractl` version, `system.readOnly` on CI-managed flows
+- Defers operational `kestractl` (install/config/commands) to `kestra-ops`
+
+Skill path: `skills/kestra-cicd/SKILL.md`
+
+---
+
 ### migrate-airflow-kestra
 
 Migrate an **Apache Airflow** DAG to a production-ready **Kestra** flow.
@@ -110,6 +129,10 @@ Use kestra-ops to run my-flow in my.namespace, wait for completion, and summariz
 Use migrate-airflow-kestra to migrate dags/ingest_pipeline.py from Airflow to Kestra, output to kestra/.
 ```
 
+```text
+Use kestra-cicd to scaffold a GitHub Actions pipeline that validates flows/ on PRs and deploys to prod.namespace on merge to main.
+```
+
 ## Structure
 
 ```
@@ -130,6 +153,11 @@ Use migrate-airflow-kestra to migrate dags/ingest_pipeline.py from Airflow to Ke
     │   │   └── workflow.md
     │   └── scripts/
     │       └── ensure-kestractl.sh
+    ├── kestra-cicd/
+    │   ├── SKILL.md
+    │   └── references/
+    │       ├── github-actions.md
+    │       └── gitlab-ci.md
     └── migrate-airflow-kestra/
         └── SKILL.md
 ```
