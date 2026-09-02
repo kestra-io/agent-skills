@@ -46,18 +46,18 @@ Skill path: `skills/kestra-flow-hardening/SKILL.md`
 
 ### kestra-ops
 
-Operate Kestra using `kestractl` for flow, execution, namespace, and namespace-file operations.
+Operate Kestra using `kestractl` across flows, executions, triggers, KV, namespaces, and namespace files.
 
 **Use when:**
 - Validating or deploying flows
 - Triggering executions and checking status
-- Managing namespaces and `nsfiles`
+- Managing triggers, KV entries, namespaces, and `nsfiles`
 - Configuring or switching CLI contexts
 
 **Covers:**
-- Context and auth setup (`config add`, `config use`, `config show`)
-- Read and inspection flows (`flows list/get`, `executions get`, `namespaces list`)
-- Safe write operations (`flows deploy`, `nsfiles upload/delete`)
+- Short `SKILL.md` entry point + on-demand `references/` (progressive disclosure)
+- `references/commands.md` — the full `kestractl` command surface, pinned to a release, with EE-only groups marked
+- `references/workflow.md` — edition (OSS/EE) awareness, per-group decision notes, `--wait` vs. poll, `*-by-query` vs. loop, revision-awareness, and guardrails
 - Operational guardrails for production and automation output
 
 Skill path: `skills/kestra-ops/SKILL.md`

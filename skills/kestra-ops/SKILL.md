@@ -14,7 +14,7 @@ loaded on demand — pull in only what the current request needs:
 | Load when the request involves | Reference |
 |--------------------------------|-----------|
 | Any command beyond the cheat-sheet below — the full `kestractl` surface (`flows`, `executions`, `triggers`, `namespaces`, `kv`, `nsfiles`, `plugins`, `workers`, `logs`, `secrets`, `server`, `blueprints`, and EE-only groups), pinned to a kestractl release | [`references/commands.md`](references/commands.md) |
-| Deciding *how* to run an operation — discovery vs. write ordering, `--wait` vs. poll, bulk vs. loop, guardrails, failure handling, and the ops report format | [`references/workflow.md`](references/workflow.md) |
+| Deciding *how* to run an operation — edition (OSS/EE) awareness, per-group decision notes, discovery vs. write ordering, `--wait` vs. poll, `*-by-query` vs. loop, revision-awareness, guardrails, and the ops report format | [`references/workflow.md`](references/workflow.md) |
 
 ## When to use
 
@@ -28,6 +28,7 @@ Use this skill when the request includes:
 
 - Target environment or context (`dev`, `staging`, `prod`)
 - Host URL, tenant, and authentication method (usually token)
+- Kestra edition (OSS / EE) — gates the EE-only command groups; ask once if unknown
 - Namespace, flow ID, execution ID, and/or local file paths
 - Output preference (`table` for human-readable, `json` for automation)
 
