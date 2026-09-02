@@ -6,16 +6,19 @@ signatures live in [`commands.md`](commands.md).
 
 ## Standard workflow
 
-1. Resolve and confirm the target context (host, tenant, context name) and the
+1. Confirm `kestractl` is present and meets the minimum version — run
+   [`../scripts/ensure-kestractl.sh`](../scripts/ensure-kestractl.sh) (dry-run;
+   installs only with `--install`). Note the resolved version for the report.
+2. Resolve and confirm the target context (host, tenant, context name) and the
    **Kestra edition** (OSS / EE) — see Edition awareness below.
-2. Run read-only discovery first (`list` / `get` / `search*`).
-3. Validate artifacts before any write (`flows validate`, `dashboards validate`,
+4. Run read-only discovery first (`list` / `get` / `search*`).
+5. Validate artifacts before any write (`flows validate`, `dashboards validate`,
    `test-suites validate`).
-4. Execute the requested operation with explicit flags — never rely on defaults for
+6. Execute the requested operation with explicit flags — never rely on defaults for
    `--namespace`, `--override`, `--fail-fast`.
-5. Verify outcomes: `--wait` / `executions watch` for runs, a follow-up `get` /
+7. Verify outcomes: `--wait` / `executions watch` for runs, a follow-up `get` /
    `list` for writes.
-6. Return a concise ops report (see Ops report format).
+8. Return a concise ops report (see Ops report format).
 
 ## Edition awareness
 
@@ -116,7 +119,7 @@ Safe.
 
 ## Ops report format
 
-- Context used (host, tenant, context name, edition)
+- Context used (host, tenant, context name, edition, kestractl version)
 - Commands executed (grouped by read vs write)
 - Results (success / failure and key IDs; for bulk ops, counts per outcome)
 - Risks, rollback notes, and follow-up actions

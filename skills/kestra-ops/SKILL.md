@@ -15,6 +15,7 @@ loaded on demand — pull in only what the current request needs:
 |--------------------------------|-----------|
 | Any command beyond the cheat-sheet below — the full `kestractl` surface (`flows`, `executions`, `triggers`, `namespaces`, `kv`, `nsfiles`, `plugins`, `workers`, `logs`, `secrets`, `server`, `blueprints`, and EE-only groups), pinned to a kestractl release | [`references/commands.md`](references/commands.md) |
 | Deciding *how* to run an operation — edition (OSS/EE) awareness, per-group decision notes, discovery vs. write ordering, `--wait` vs. poll, `*-by-query` vs. loop, revision-awareness, guardrails, and the ops report format | [`references/workflow.md`](references/workflow.md) |
+| `kestractl` is missing, or older than this skill expects | [`scripts/ensure-kestractl.sh`](scripts/ensure-kestractl.sh) — dry-run check + on-request install/upgrade |
 
 ## When to use
 
@@ -34,9 +35,20 @@ Use this skill when the request includes:
 
 ## Prerequisites
 
-- `kestractl` is installed and executable
-- Tenant plus one of: an API token, or username/password (basic auth)
-- A valid context exists in `~/.kestractl/config.yaml`, or values are provided via env vars / flags
+- **`kestractl` present and current.** Run [`scripts/ensure-kestractl.sh`](scripts/ensure-kestractl.sh)
+  first — it is a no-op if `kestractl` is on `PATH` and meets the minimum version
+  (`1.16.0`). If it reports missing or stale:
+  1. Show the user the printed **PLAN** and the two install-dir choices — `~/.local/bin`
+     (user home scope) or `<skill>/scripts/bin` (self-contained). Get an explicit OK.
+  2. Re-run with `--install --install-dir <their choice>`. The script uses the official
+     published installer (`curl … install-scripts/install.sh | bash`, which does OS/arch
+     detection + sha256 verification). Never a system path, never `sudo`.
+  3. Surface the resolved `kestractl` version in the ops report.
+- **A connection context.** After a fresh install, or when none exists, **ask** the user
+  whether to add one (don't assume): `kestractl config add <name> <host> <tenant> …
+  --default` — `--username`/`--password` for OSS, `--token` for Enterprise. See
+  Configuration precedence below.
+- Tenant plus one of: an API token, or username/password (basic auth).
 
 ## Configuration precedence
 

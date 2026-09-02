@@ -58,6 +58,7 @@ Operate Kestra using `kestractl` across flows, executions, triggers, KV, namespa
 - Short `SKILL.md` entry point + on-demand `references/` (progressive disclosure)
 - `references/commands.md` — the full `kestractl` command surface, pinned to a release, with EE-only groups marked
 - `references/workflow.md` — edition (OSS/EE) awareness, per-group decision notes, `--wait` vs. poll, `*-by-query` vs. loop, revision-awareness, and guardrails
+- `scripts/ensure-kestractl.sh` — dry-run check for `kestractl`, with on-request install/upgrade via the official installer
 - Operational guardrails for production and automation output
 
 Skill path: `skills/kestra-ops/SKILL.md`
@@ -118,9 +119,11 @@ Use migrate-airflow-kestra to migrate dags/ingest_pipeline.py from Airflow to Ke
     │       └── hardening-patterns.md
     ├── kestra-ops/
     │   ├── SKILL.md
-    │   └── references/
-    │       ├── commands.md
-    │       └── workflow.md
+    │   ├── references/
+    │   │   ├── commands.md
+    │   │   └── workflow.md
+    │   └── scripts/
+    │       └── ensure-kestractl.sh
     └── migrate-airflow-kestra/
         └── SKILL.md
 ```

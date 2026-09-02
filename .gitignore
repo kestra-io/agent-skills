@@ -1,0 +1,2 @@
+# kestractl binary when installed self-contained via scripts/ensure-kestractl.sh --install-dir <skill>/scripts/bin
+skills/kestra-ops/scripts/bin/
