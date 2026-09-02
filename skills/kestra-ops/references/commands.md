@@ -34,22 +34,25 @@ authorization/edition error against an OSS instance.
 ## Config
 
 ```bash
-# Token auth
-kestractl config add dev http://localhost:8080 main --token YOUR_TOKEN
-kestractl config add prod https://prod.kestra.io production --token PROD_TOKEN --default
+# Token auth — pass the secret as a $VAR, never a literal (shell history / ps)
+kestractl config add dev http://localhost:8080 main --token "$KESTRACTL_TOKEN"
+kestractl config add prod https://prod.kestra.io production --token "$KESTRACTL_TOKEN" --default
 
 # Basic auth (username/password) — persists as auth_method: basic
-kestractl config add dev http://localhost:8080 main --username you@example.com --password YOUR_PASSWORD --default
+kestractl config add oss http://localhost:8080 main --username "$KESTRACTL_USERNAME" --password "$KESTRACTL_PASSWORD" --default
 
-kestractl config add dev http://localhost:8080 main --token YOUR_TOKEN \
+kestractl config add dev http://localhost:8080 main --token "$KESTRACTL_TOKEN" \
   --header "X-Custom-Header:value"
-kestractl config show          # list all contexts
+chmod 600 ~/.kestractl/config.yaml
+kestractl config show          # list all contexts (token shown as [REDACTED])
 kestractl config use prod      # switch default context
 kestractl config remove dev
 ```
 
-Prefer the config file or `KESTRACTL_TOKEN` / `KESTRACTL_USERNAME` + `KESTRACTL_PASSWORD`
-over passing `--token` / `--password` as flags in shared or logged shells.
+Better still, skip `config add` and export `KESTRACTL_HOST` / `KESTRACTL_TENANT` /
+`KESTRACTL_TOKEN` (or `KESTRACTL_USERNAME` + `KESTRACTL_PASSWORD`) — read on every
+command, nothing written to disk. `config add --token` / `--password` are plain
+flags (not env-bound), so their value must appear on the line; keep it a `$VAR`.
 
 ## Flows
 

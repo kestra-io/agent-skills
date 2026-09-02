@@ -134,9 +134,10 @@ fine, e.g. one retry on a transient connectivity blip.
   `nsfiles delete --recursive`, `namespace-sync --delete`): confirm scope, show the
   matching read first, use `--force` / `--yes` only intentionally.
 - Never auto-run an EE command against an OSS instance to test edition.
-- Prefer env vars or the config file over credential flags on the command line —
-  `KESTRACTL_TOKEN` over `--token`, `KESTRACTL_USERNAME` / `KESTRACTL_PASSWORD` over
-  `--password` (both land in shell history and the process list).
+- Never a literal token/password as a CLI argument — it lands in shell history and
+  the process list (`ps`). Prefer env vars (`KESTRACTL_TOKEN`, or
+  `KESTRACTL_USERNAME` / `KESTRACTL_PASSWORD`) read on every command; if persisting
+  via `config add`, pass the secret as a `$VAR` and `chmod 600 ~/.kestractl/config.yaml`.
 
 ## Ops report format
 

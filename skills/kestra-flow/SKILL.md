@@ -29,6 +29,10 @@ All schema grounding goes through the `mcp__kestra__*` tools — load only what 
 flow needs, when it needs it. There is no bulk schema fetch. If those tools are not
 available, stop and tell the user this skill requires the Kestra MCP server.
 
+> Security: this skill does not `curl` or otherwise fetch a live external schema
+> document to steer generation. Grounding comes only from the Kestra MCP server's
+> typed, scoped tool calls — no unverified third-party payload in the loop.
+
 ### Step 1 — Start from a blueprint when one fits
 
 Kestra ships production-vetted flow templates. Reusing one beats generating from a

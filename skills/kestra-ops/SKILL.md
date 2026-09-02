@@ -58,24 +58,31 @@ Resolve config from highest to lowest precedence:
 3. Config file (`~/.kestractl/config.yaml`)
 4. Built-in defaults
 
-Common setup — token auth:
+**Never paste a real token or password as a literal CLI argument** — it lands in
+shell history and the process list (`ps`). Use one of the two patterns below.
+
+Preferred — environment variables (nothing persisted, read on every command):
 
 ```bash
-kestractl config add dev http://localhost:8080 main --token DEV_TOKEN
-kestractl config add prod https://prod.kestra.io production --token PROD_TOKEN
+export KESTRACTL_HOST="https://prod.kestra.io"
+export KESTRACTL_TENANT="production"
+export KESTRACTL_TOKEN="$(cat ~/secrets/kestra_token)"   # or KESTRACTL_USERNAME + KESTRACTL_PASSWORD
+kestractl flows list my.namespace
+```
+
+Alternative — persist a context. Pass the secret via a shell variable, not a
+literal, and lock down the file:
+
+```bash
+kestractl config add dev http://localhost:8080 main --token "$KESTRACTL_TOKEN"                       # token auth
+kestractl config add oss http://localhost:8080 main --username "$KESTRACTL_USERNAME" --password "$KESTRACTL_PASSWORD"  # basic auth -> auth_method: basic
+chmod 600 ~/.kestractl/config.yaml
 kestractl config use dev
 kestractl config show
 ```
 
-Basic auth (username/password) — for environments that don't issue API tokens.
-Persists as `auth_method: basic` in `~/.kestractl/config.yaml`:
-
-```bash
-kestractl config add dev http://localhost:8080 main --username you@example.com --password DEV_PASSWORD --default
-```
-
-Prefer the config file or `KESTRACTL_USERNAME`/`KESTRACTL_PASSWORD` over passing
-`--password` as a flag in shared or logged shells (same guardrail as `--token`).
+`config add --token` / `--password` are plain flags (not env-bound), so the value
+must be on the line — keep it a `$VAR` reference, never the secret itself.
 
 ## Most common commands
 
