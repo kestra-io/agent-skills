@@ -200,6 +200,10 @@ Do not restate — reuse the `kestra-flow` skill's rules so they don't drift:
 - No hardcoded secrets / credentials — use `inputs` of type `SECRET` or `{{ secret('...') }}`.
 - Quoting — prefer double quotes; single quotes inside when needed.
 - Structural preservation — touch only the relevant part; preserve `id` / `namespace`.
+- Resolving plugins and backends — when a finding recommends a task runner, storage,
+  secret manager, log shipper, or replacement plugin, resolve its FQCN and check
+  version compatibility via the MCP tools per `kestra-flow`'s
+  *Resolving plugins and backends* section. Never name a plugin from memory.
 
 ## Example prompts
 

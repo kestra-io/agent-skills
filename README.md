@@ -17,6 +17,7 @@ Generate, modify, or debug Kestra Flow YAML grounded in the live schema via the 
 **Covers:**
 - Blueprint-first scaffolding — search vetted templates via `blueprints` / `get_blueprint_flow`, adapt rather than generate from scratch, EE-only blueprints gated for OSS users
 - Incremental, on-demand schema grounding via `mcp__kestra__*` — flow structure from `list_doc_children` / `get_doc`, types from `search` / `plugin_tasks`, per-task schema from `task_schema` (no multi-MB download)
+- Resolve, don't guess — task runners, storage, secret managers, and log shippers via `list_*`; plugin/version compatibility via `versions` / `plugin_versions`
 - Schema-validated task and trigger generation
 - Partial modification (touch only the relevant part)
 - Guardrails: no invented types, no hardcoded secrets, correct looping and trigger patterns

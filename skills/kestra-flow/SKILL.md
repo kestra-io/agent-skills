@@ -78,11 +78,8 @@ Identify from the user message or conversation:
 - Existing flow YAML (for modification requests)
 - Whether this is an **addition / deletion / modification** or a **full rewrite**
 
-Resolve every task / trigger to a real FQCN — never guess one:
-- `mcp__kestra__search` with `type: "PLUGINS"`, or `mcp__kestra__list_plugins` then
-  `mcp__kestra__plugin_tasks`, to find the class for the intent.
-- For task runners, storage, secret managers, log exporters, or trigger types, use
-  the matching `mcp__kestra__list_*` tool.
+Resolve every task / trigger / backend to a real FQCN — never guess one. See
+[Resolving plugins and backends](#resolving-plugins-and-backends) below.
 
 ### Step 4 — Fetch the per-task schema, then generate
 
@@ -92,6 +89,35 @@ enum value, required field, and output reference against it. Do not write a task
 before its `task_schema` is loaded.
 
 Then apply all generation rules below and output raw YAML only.
+
+## Resolving plugins and backends
+
+Never type a plugin, task, or backend FQCN from memory — the plugin ecosystem
+changes fast. Resolve it through the MCP tools first, then validate with
+`task_schema` (Step 4). This section is also referenced by `kestra-flow-hardening`
+when auditing an existing flow's plugin choices.
+
+**Requirement → tool.** Recommend only FQCNs returned by these:
+
+| The flow needs… | Tool |
+|-----------------|------|
+| A task for some intent | `mcp__kestra__search` (`type: "PLUGINS"`) or `mcp__kestra__list_plugins` → `mcp__kestra__plugin_tasks` |
+| A task runner (Kubernetes, AWS Batch, GCP Batch, Docker, …) | `mcp__kestra__list_task_runners` |
+| An internal storage backend (S3, GCS, Azure Blob, MinIO, …) | `mcp__kestra__list_storages` |
+| A secret manager backend (Vault, AWS/GCP/Azure, 1Password, CyberArk, …) | `mcp__kestra__list_secret_managers` |
+| A log shipper / exporter | `mcp__kestra__list_log_exporters` |
+| A trigger type | `mcp__kestra__list_triggers` |
+
+**Check version compatibility before recommending.**
+- `mcp__kestra__versions` (optionally `plugin: <name>`) — the plugin versions
+  available on the instance. A plugin absent from the output may not be installed —
+  say so rather than assuming it is.
+- `mcp__kestra__plugin_versions` with the repo name (e.g. `plugin-aws`) — full
+  release history and the Kestra version each release targets. Use it to flag a
+  compatibility gap against the user's Kestra version.
+
+**Prefer non-deprecated.** If `task_schema` marks a type or property `$deprecated`,
+use the current replacement and note the change.
 
 ## Generation rules
 
