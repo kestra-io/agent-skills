@@ -15,6 +15,7 @@ Generate, modify, or debug Kestra Flow YAML grounded in the live schema via the 
 - Debugging invalid YAML or incorrect task/trigger references
 
 **Covers:**
+- Blueprint-first scaffolding — search vetted templates via `blueprints` / `get_blueprint_flow`, adapt rather than generate from scratch, EE-only blueprints gated for OSS users
 - Incremental, on-demand schema grounding via `mcp__kestra__*` — flow structure from `list_doc_children` / `get_doc`, types from `search` / `plugin_tasks`, per-task schema from `task_schema` (no multi-MB download)
 - Schema-validated task and trigger generation
 - Partial modification (touch only the relevant part)

@@ -20,6 +20,7 @@ Use this skill when the request includes:
 - A description of the desired flow behavior
 - Namespace (and tenant ID if applicable)
 - Kestra version, if known — used to pin `get_doc` lookups; default to latest
+- Kestra edition (OSS / EE), if known — gates EE-only blueprints
 - Existing flow YAML if the request is a modification
 
 ## Workflow
@@ -28,7 +29,32 @@ All schema grounding goes through the `mcp__kestra__*` tools — load only what 
 flow needs, when it needs it. There is no bulk schema fetch. If those tools are not
 available, stop and tell the user this skill requires the Kestra MCP server.
 
-### Step 1 — Load flow structure (on demand)
+### Step 1 — Start from a blueprint when one fits
+
+Kestra ships production-vetted flow templates. Reusing one beats generating from a
+blank schema — fewer invented task combinations.
+
+1. `mcp__kestra__blueprints` with `query` derived from the user's intent. Narrow with
+   `tags` and/or `types` (task-type FQCNs) once known — resolve FQCNs the same way as
+   Step 3.
+2. Judge the results by `title`, `description`, and `includedTasks`. A blueprint is a
+   good starting point only if it covers most of the requested behavior.
+   - **EE gate:** if a candidate has `ee: true` and the user is on OSS, do not offer
+     it — say an EE-only blueprint exists but was skipped. If the edition is unknown,
+     ask before using an `ee: true` blueprint.
+3. For the closest match, `mcp__kestra__get_blueprint_flow` with its `id` to get the
+   full YAML, then **adapt** rather than accept as-is:
+   - set `id` / `namespace` to the user's values
+   - replace any inline credentials, tokens, or hostnames with `{{ secret('...') }}`
+     or `SECRET`-typed `inputs`
+   - remove tasks unrelated to the request; tune parameters to match it
+4. If no blueprint is a close fit, skip to Step 2 and generate from the schema. Do
+   **not** force-fit a loosely related blueprint.
+
+Whether adapted from a blueprint or generated fresh, the result still passes through
+Step 4 schema validation — blueprints can lag the running version's schema.
+
+### Step 2 — Load flow structure (on demand)
 
 The flow-level shape (`id`, `namespace`, `inputs`, `variables`, `tasks`, `triggers`,
 `errors`, `finally`, `afterExecution`, `pluginDefaults`, `concurrency`, `sla`,
@@ -44,7 +70,7 @@ Kestra version:
 
 Do not assume a component exists in the target version — check the gate first.
 
-### Step 2 — Collect context and resolve task/trigger types
+### Step 3 — Collect context and resolve task/trigger types
 
 Identify from the user message or conversation:
 - `id` — flow identifier (preserve if provided)
@@ -58,7 +84,7 @@ Resolve every task / trigger to a real FQCN — never guess one:
 - For task runners, storage, secret managers, log exporters, or trigger types, use
   the matching `mcp__kestra__list_*` tool.
 
-### Step 3 — Fetch the per-task schema, then generate
+### Step 4 — Fetch the per-task schema, then generate
 
 For **every** task and trigger type in the flow, call
 `mcp__kestra__task_schema` with `cls: <FQCN>` and validate every property name,
