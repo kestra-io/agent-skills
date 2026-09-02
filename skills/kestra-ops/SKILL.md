@@ -13,7 +13,7 @@ loaded on demand — pull in only what the current request needs:
 
 | Load when the request involves | Reference |
 |--------------------------------|-----------|
-| Any command beyond the cheat-sheet below, or a command group not shown here (`triggers`, `kv`, `plugins`, `workers`, `blueprints`, EE resources) | [`references/commands.md`](references/commands.md) |
+| Any command beyond the cheat-sheet below — the full `kestractl` surface (`flows`, `executions`, `triggers`, `namespaces`, `kv`, `nsfiles`, `plugins`, `workers`, `logs`, `secrets`, `server`, `blueprints`, and EE-only groups), pinned to a kestractl release | [`references/commands.md`](references/commands.md) |
 | Deciding *how* to run an operation — discovery vs. write ordering, `--wait` vs. poll, bulk vs. loop, guardrails, failure handling, and the ops report format | [`references/workflow.md`](references/workflow.md) |
 
 ## When to use
