@@ -7,7 +7,7 @@ A curated collection of agent skills for operating Kestra environments.
 
 ### kestra-flow
 
-Generate, modify, or debug Kestra Flow YAML grounded in the live flow schema — the same way the Kestra AI Copilot does.
+Generate, modify, or debug Kestra Flow YAML grounded in the live schema via the Kestra MCP server — the same way the Kestra AI Copilot does.
 
 **Use when:**
 - Generating a new Kestra flow from a description
@@ -15,7 +15,7 @@ Generate, modify, or debug Kestra Flow YAML grounded in the live flow schema —
 - Debugging invalid YAML or incorrect task/trigger references
 
 **Covers:**
-- Fetching the live flow schema from `https://api.kestra.io/v1/plugins/schemas/flow`
+- Incremental, on-demand schema grounding via `mcp__kestra__*` — flow structure from `list_doc_children` / `get_doc`, types from `search` / `plugin_tasks`, per-task schema from `task_schema` (no multi-MB download)
 - Schema-validated task and trigger generation
 - Partial modification (touch only the relevant part)
 - Guardrails: no invented types, no hardcoded secrets, correct looping and trigger patterns

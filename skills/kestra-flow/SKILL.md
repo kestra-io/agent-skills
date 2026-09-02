@@ -1,7 +1,7 @@
 ---
 name: kestra-flow
-description: Generate, modify, or debug Kestra Flow YAML by fetching the live flow schema and applying the same guardrails used by the Kestra AI Copilot. Use when users ask to create, write, update, or fix a Kestra flow.
-compatibility: Requires curl and network access to https://api.kestra.io/v1/plugins/schemas/flow. No Kestra instance required.
+description: Generate, modify, or debug Kestra Flow YAML grounded in the live schema via the Kestra MCP server, applying the same guardrails used by the Kestra AI Copilot. Use when users ask to create, write, update, or fix a Kestra flow.
+compatibility: Requires the Kestra MCP server (`mcp__kestra__*` tools). No Kestra instance, and no multi-megabyte schema download, required.
 ---
 
 # Kestra Flow Skill
@@ -19,21 +19,32 @@ Use this skill when the request includes:
 
 - A description of the desired flow behavior
 - Namespace (and tenant ID if applicable)
+- Kestra version, if known — used to pin `get_doc` lookups; default to latest
 - Existing flow YAML if the request is a modification
 
 ## Workflow
 
-### Step 1 — Fetch the flow schema
+All schema grounding goes through the `mcp__kestra__*` tools — load only what the
+flow needs, when it needs it. There is no bulk schema fetch. If those tools are not
+available, stop and tell the user this skill requires the Kestra MCP server.
 
-Fetch the full schema with `curl` and read it directly — do not pipe it through any interpreter:
+### Step 1 — Load flow structure (on demand)
 
-```bash
-curl -s https://api.kestra.io/v1/plugins/schemas/flow
-```
+The flow-level shape (`id`, `namespace`, `inputs`, `variables`, `tasks`, `triggers`,
+`errors`, `finally`, `afterExecution`, `pluginDefaults`, `concurrency`, `sla`,
+`checks`, `disabled`, `labels`, `retry`) comes from the docs, pinned to the user's
+Kestra version:
 
-Read the raw JSON output to validate every type, property name, and structure used in the output. Do not generate anything before the schema is available.
+- `mcp__kestra__list_doc_children` with `path: "docs/workflow-components"` — the
+  component index; each entry's metadata carries the version gate (e.g. `checks`
+  `>= 1.2.0`, `sla` `>= 0.20.0`).
+- `mcp__kestra__get_doc` for **only** the components this flow uses (e.g.
+  `docs/workflow-components/inputs`, `.../triggers`, `.../errors`, `.../retries`,
+  `.../concurrency`). Pass `version` when the user gave a Kestra version.
 
-### Step 2 — Collect context
+Do not assume a component exists in the target version — check the gate first.
+
+### Step 2 — Collect context and resolve task/trigger types
 
 Identify from the user message or conversation:
 - `id` — flow identifier (preserve if provided)
@@ -41,14 +52,27 @@ Identify from the user message or conversation:
 - Existing flow YAML (for modification requests)
 - Whether this is an **addition / deletion / modification** or a **full rewrite**
 
-### Step 3 — Generate the YAML
+Resolve every task / trigger to a real FQCN — never guess one:
+- `mcp__kestra__search` with `type: "PLUGINS"`, or `mcp__kestra__list_plugins` then
+  `mcp__kestra__plugin_tasks`, to find the class for the intent.
+- For task runners, storage, secret managers, log exporters, or trigger types, use
+  the matching `mcp__kestra__list_*` tool.
 
-Apply all generation rules below, then output raw YAML only.
+### Step 3 — Fetch the per-task schema, then generate
+
+For **every** task and trigger type in the flow, call
+`mcp__kestra__task_schema` with `cls: <FQCN>` and validate every property name,
+enum value, required field, and output reference against it. Do not write a task
+before its `task_schema` is loaded.
+
+Then apply all generation rules below and output raw YAML only.
 
 ## Generation rules
 
 **Schema compliance**
-- Use only task types and properties explicitly defined in the fetched schema. Never invent or guess types or property names.
+- Use only task/trigger types and properties present in the `mcp__kestra__task_schema`
+  response for that type. Never invent or guess types or property names.
+- Use only flow-level properties confirmed via `get_doc` for the target version.
 - Property keys must be unique within each task or block.
 
 **Structural preservation**
@@ -90,7 +114,8 @@ Apply all generation rules below, then output raw YAML only.
 - Prefer double quotes; use single quotes inside double-quoted strings when needed.
 
 **Error handling**
-- If the request cannot be fulfilled using only schema-defined types and properties, output exactly:
+- If the request cannot be fulfilled using only types and properties confirmed via
+  `mcp__kestra__task_schema` / `get_doc`, output exactly:
   ```
   I cannot generate a valid Kestra Flow YAML for this request based on the available schema.
   ```
