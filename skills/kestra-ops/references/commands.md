@@ -34,14 +34,22 @@ authorization/edition error against an OSS instance.
 ## Config
 
 ```bash
+# Token auth
 kestractl config add dev http://localhost:8080 main --token YOUR_TOKEN
 kestractl config add prod https://prod.kestra.io production --token PROD_TOKEN --default
+
+# Basic auth (username/password) — persists as auth_method: basic
+kestractl config add dev http://localhost:8080 main --username you@example.com --password YOUR_PASSWORD --default
+
 kestractl config add dev http://localhost:8080 main --token YOUR_TOKEN \
   --header "X-Custom-Header:value"
 kestractl config show          # list all contexts
 kestractl config use prod      # switch default context
 kestractl config remove dev
 ```
+
+Prefer the config file or `KESTRACTL_TOKEN` / `KESTRACTL_USERNAME` + `KESTRACTL_PASSWORD`
+over passing `--token` / `--password` as flags in shared or logged shells.
 
 ## Flows
 

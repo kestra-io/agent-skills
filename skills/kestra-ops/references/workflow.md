@@ -110,7 +110,9 @@ Safe.
   `nsfiles delete --recursive`, `namespace-sync --delete`): confirm scope, show the
   matching read first, use `--force` / `--yes` only intentionally.
 - Never auto-run an EE command against an OSS instance to test edition.
-- Prefer `KESTRACTL_TOKEN` (env) over `--token` on the command line.
+- Prefer env vars or the config file over credential flags on the command line —
+  `KESTRACTL_TOKEN` over `--token`, `KESTRACTL_USERNAME` / `KESTRACTL_PASSWORD` over
+  `--password` (both land in shell history and the process list).
 
 ## Ops report format
 

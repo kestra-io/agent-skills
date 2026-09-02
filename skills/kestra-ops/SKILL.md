@@ -35,18 +35,18 @@ Use this skill when the request includes:
 ## Prerequisites
 
 - `kestractl` is installed and executable
-- Access token and tenant are available
+- Tenant plus one of: an API token, or username/password (basic auth)
 - A valid context exists in `~/.kestractl/config.yaml`, or values are provided via env vars / flags
 
 ## Configuration precedence
 
 Resolve config from highest to lowest precedence:
-1. Command flags (`--host`, `--tenant`, `--token`, `--output`)
-2. Environment variables (`KESTRACTL_HOST`, `KESTRACTL_TENANT`, `KESTRACTL_TOKEN`, `KESTRACTL_OUTPUT`)
+1. Command flags (`--host`, `--tenant`, `--token` or `--username`/`--password`, `--output`)
+2. Environment variables (`KESTRACTL_HOST`, `KESTRACTL_TENANT`, `KESTRACTL_TOKEN` or `KESTRACTL_USERNAME`/`KESTRACTL_PASSWORD`, `KESTRACTL_OUTPUT`)
 3. Config file (`~/.kestractl/config.yaml`)
 4. Built-in defaults
 
-Common setup:
+Common setup — token auth:
 
 ```bash
 kestractl config add dev http://localhost:8080 main --token DEV_TOKEN
@@ -54,6 +54,16 @@ kestractl config add prod https://prod.kestra.io production --token PROD_TOKEN
 kestractl config use dev
 kestractl config show
 ```
+
+Basic auth (username/password) — for environments that don't issue API tokens.
+Persists as `auth_method: basic` in `~/.kestractl/config.yaml`:
+
+```bash
+kestractl config add dev http://localhost:8080 main --username you@example.com --password DEV_PASSWORD --default
+```
+
+Prefer the config file or `KESTRACTL_USERNAME`/`KESTRACTL_PASSWORD` over passing
+`--password` as a flag in shared or logged shells (same guardrail as `--token`).
 
 ## Most common commands
 
