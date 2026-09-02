@@ -117,7 +117,10 @@ Use migrate-airflow-kestra to migrate dags/ingest_pipeline.py from Airflow to Ke
     │   └── references/
     │       └── hardening-patterns.md
     ├── kestra-ops/
-    │   └── SKILL.md
+    │   ├── SKILL.md
+    │   └── references/
+    │       ├── commands.md
+    │       └── workflow.md
     └── migrate-airflow-kestra/
         └── SKILL.md
 ```

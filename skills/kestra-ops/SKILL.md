@@ -8,6 +8,14 @@ compatibility: Requires kestractl, network access to the Kestra API, and valid t
 
 Use this skill to perform day-to-day Kestra operations with `kestractl`.
 
+This SKILL.md is the entry point. Detailed material lives in `references/` and is
+loaded on demand — pull in only what the current request needs:
+
+| Load when the request involves | Reference |
+|--------------------------------|-----------|
+| Any command beyond the cheat-sheet below, or a command group not shown here (`triggers`, `kv`, `plugins`, `workers`, `blueprints`, EE resources) | [`references/commands.md`](references/commands.md) |
+| Deciding *how* to run an operation — discovery vs. write ordering, `--wait` vs. poll, bulk vs. loop, guardrails, failure handling, and the ops report format | [`references/workflow.md`](references/workflow.md) |
+
 ## When to use
 
 Use this skill when the request includes:
@@ -27,7 +35,7 @@ Use this skill when the request includes:
 
 - `kestractl` is installed and executable
 - Access token and tenant are available
-- A valid context exists in `~/.kestractl/config.yaml` or values are provided via env vars/flags
+- A valid context exists in `~/.kestractl/config.yaml`, or values are provided via env vars / flags
 
 ## Configuration precedence
 
@@ -46,63 +54,16 @@ kestractl config use dev
 kestractl config show
 ```
 
-## Standard workflow
+## Most common commands
 
-1. Resolve and confirm the target context.
-2. Run read-only discovery first.
-3. Validate artifacts before any deployment.
-4. Execute the requested operation with explicit flags.
-5. Verify outcomes (`--wait` for run operations where needed).
-6. Return a concise ops report with results and follow-up actions.
-
-## Command patterns
-
-Flows:
+The everyday subset — for anything else, load [`references/commands.md`](references/commands.md):
 
 ```bash
 kestractl flows list my.namespace
-kestractl flows get my.namespace my-flow
 kestractl flows validate ./flows/
 kestractl flows deploy ./flows/ --namespace prod.namespace --override --fail-fast
-```
-
-Executions:
-
-```bash
 kestractl executions run my.namespace my-flow --wait
-kestractl executions get 2TLGqHrXC9k8BczKJe5djX
 ```
-
-Namespaces:
-
-```bash
-kestractl namespaces list
-kestractl namespaces list --query my.namespace
-```
-
-Namespace files:
-
-```bash
-kestractl nsfiles list my.namespace --path workflows/ --recursive
-kestractl nsfiles get my.namespace workflows/example.yaml --revision 3
-kestractl nsfiles upload my.namespace ./assets resources --override --fail-fast
-kestractl nsfiles delete my.namespace workflows --recursive
-```
-
-## Guardrails
-
-- Confirm production context before write operations (`deploy`, `upload`, `delete`).
-- Prefer `flows validate` before `flows deploy`.
-- Use `--output json` for scripting and automation reliability.
-- Avoid `--verbose` in shared logs because it can expose credentials.
-- For destructive `nsfiles` actions, confirm path scope and only use `--force` intentionally.
-
-## Response format
-
-- Context used (host, tenant, context name)
-- Commands executed (grouped by read vs write)
-- Results (success/failure and key IDs)
-- Risks, rollback notes, and follow-up actions
 
 ## Example prompts
 
