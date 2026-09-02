@@ -28,19 +28,22 @@ Skill path: `skills/kestra-flow/SKILL.md`
 
 ### kestra-flow-hardening
 
-Audit existing Kestra flows and add production-hardening controls — the consulting counterpart to `kestra-flow`.
+Audit existing Kestra flows, add production-hardening controls, and diagnose failures — the consulting counterpart to `kestra-flow`.
 
 **Use when:**
 - Hardening one or more flows for production
 - Auditing flows for resilience, idempotency, and guardrail gaps
 - Adding retries, timeouts, error handling, concurrency limits, SLAs, or idempotency guards
+- Diagnosing why a flow or execution failed ("troubleshoot mode")
 
 **Covers:**
 - Severity-ranked audit report (Critical / High / Medium / Low) with risk, caveat, and proposed fix per finding
+- Troubleshoot mode — root-cause a failure grounded in version-pinned docs (`search_docs` / `get_doc`) and `task_schema`, citing the page used; `references/troubleshooting.md` maps common failure signatures
 - Idempotency judgment — never recommends a blind retry on a non-idempotent write; flags the dedup-guard vs. retry-if-safe branches
 - Proportional auditing calibrated by flow signals (triggers, side-effects, namespace env); "already sound" is a valid result
 - Surgical, schema-validated edits applied on confirmation, inline and structure-preserving
 - Version- and edition-aware (OSS / EE), with EE-only patterns labeled and given an OSS fallback
+- MCP-grounded — no schema download; flow structure from `list_doc_children` / `get_doc`, types from `task_schema`
 
 Skill path: `skills/kestra-flow-hardening/SKILL.md`
 
@@ -118,7 +121,8 @@ Use migrate-airflow-kestra to migrate dags/ingest_pipeline.py from Airflow to Ke
     ├── kestra-flow-hardening/
     │   ├── SKILL.md
     │   └── references/
-    │       └── hardening-patterns.md
+    │       ├── hardening-patterns.md
+    │       └── troubleshooting.md
     ├── kestra-ops/
     │   ├── SKILL.md
     │   ├── references/

@@ -1,11 +1,11 @@
 # Hardening Patterns Reference
 
 Canonical, copy-pasteable YAML for each hardening construct, with **when to apply** and
-**when NOT to**. Validate every property against the live schema
-(`curl -s https://api.kestra.io/v1/plugins/schemas/flow`) before recommending — versions
-differ, and a property absent from the schema must not be used.
+**when NOT to**. Validate every property via `mcp__kestra__task_schema` (`cls: <FQCN>`)
+and, for flow-level shape, `mcp__kestra__get_doc` (`version` pinned) before recommending —
+versions differ, and a property absent from the schema must not be used.
 
-Version / edition gates (verify against the fetched schema):
+Version / edition gates (verify via `task_schema` / `get_doc` for the target version):
 `concurrency` ≥ 0.13 · `sla` ≥ 0.20 · `finally` ≥ 0.21 · `afterExecution` ≥ 0.22 ·
 `checks` ≥ 1.2 · `retry.maxAttempts` (was `maxAttempt` before 0.24) ·
 `system.correlationId` idempotency via the executions search API is **Enterprise-only**.
@@ -345,7 +345,7 @@ the Code Editor, and reusable across flows. Pass values via `env`.
 ### Script duplicating plugin functionality → native plugin
 
 When a script reimplements something a plugin already does, recommend the native task — but
-**verify the task exists in the fetched schema before naming it**.
+**verify the task exists via `mcp__kestra__task_schema` before naming it**.
 
 ```yaml
 # BEFORE — shell task wrapping curl
@@ -362,7 +362,7 @@ When a script reimplements something a plugin already does, recommend the native
   uri: https://api.example.com/data
 ```
 
-Common mappings (confirm against the schema / plugin list):
+Common mappings (confirm via `task_schema` / `list_plugins`):
 
 | Scripted with | Prefer native plugin |
 |---------------|----------------------|
