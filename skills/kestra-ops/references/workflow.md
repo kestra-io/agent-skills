@@ -101,6 +101,27 @@ Safe.
 - **Explicit flags always:** `--namespace`, `--override`, `--fail-fast`, `--yes`
   are never assumed — pass them deliberately or not at all.
 
+## Failure handling
+
+`kestractl` exits `1` for **any** command error (Cobra `RunE` → `os.Exit(1)`) and
+writes a message to stderr. There are no per-class exit codes — **classify by the
+stderr message, not the exit code.** A non-zero exit from `flows validate` or
+`executions watch` is a *result* signal (the flow is invalid / the execution
+failed), not a CLI malfunction — treat those per their rows below.
+
+| Class | Signal | What to do |
+|-------|--------|-----------|
+| **Auth** | `401`, `unauthorized`, `invalid token`, `authentication failed` | Stop. Surface it and prompt for re-auth (new token, or `config add`/`config use`). **Never retry a write with the same credentials.** |
+| **Connectivity** | `connection refused`, `no such host`, `i/o timeout`, `context deadline exceeded`, TLS errors | Stop and report the host that failed. **Do not** silently retry against another configured context — confirm the target with the user first. |
+| **Validation** | `flows validate` (or `dashboards validate` / `test-suites validate`) exits non-zero | Expected outcome, not a recoverable error. Surface the reported detail (constraint / line) and **do not proceed to `deploy`**. |
+| **Partial / bulk** | `deploy ./dir/`, `nsfiles upload ./dir`, `*-by-query`, `*-bulk` exits non-zero | Some items may have succeeded. Re-list or parse the JSON output and report **which items succeeded and which failed**, item by item — never a single pass/fail. Do not assume `--fail-fast` was set (without it, later items still ran). |
+| **Not found / conflict** | `404`, `not found`, `already exists` | Report as-is. For `already exists` on a write, ask before re-running with `--override`. |
+
+**Never auto-retry a write** (`deploy`, `run`, `upload`, `delete`, `set`,
+`enable`/`disable`, `*-by-query`, `*-bulk`, `namespace-sync`) after a failure —
+the partial state is unknown. Read-only retries (`list`, `get`, `search*`) are
+fine, e.g. one retry on a transient connectivity blip.
+
 ## Guardrails
 
 - Confirm production context before any write (`deploy`, `run`, `upload`, `delete`,
@@ -122,4 +143,6 @@ Safe.
 - Context used (host, tenant, context name, edition, kestractl version)
 - Commands executed (grouped by read vs write)
 - Results (success / failure and key IDs; for bulk ops, counts per outcome)
+- Failures, if any: the class (auth / connectivity / validation / partial / …), the
+  stderr detail, and — for bulk ops — the per-item success/failure list
 - Risks, rollback notes, and follow-up actions

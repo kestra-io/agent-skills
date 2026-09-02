@@ -14,7 +14,7 @@ loaded on demand — pull in only what the current request needs:
 | Load when the request involves | Reference |
 |--------------------------------|-----------|
 | Any command beyond the cheat-sheet below — the full `kestractl` surface (`flows`, `executions`, `triggers`, `namespaces`, `kv`, `nsfiles`, `plugins`, `workers`, `logs`, `secrets`, `server`, `blueprints`, and EE-only groups), pinned to a kestractl release | [`references/commands.md`](references/commands.md) |
-| Deciding *how* to run an operation — edition (OSS/EE) awareness, per-group decision notes, discovery vs. write ordering, `--wait` vs. poll, `*-by-query` vs. loop, revision-awareness, guardrails, and the ops report format | [`references/workflow.md`](references/workflow.md) |
+| Deciding *how* to run an operation — edition (OSS/EE) awareness, per-group decision notes, discovery vs. write ordering, `--wait` vs. poll, `*-by-query` vs. loop, revision-awareness, failure handling, guardrails, and the ops report format | [`references/workflow.md`](references/workflow.md) |
 | `kestractl` is missing, or older than this skill expects | [`scripts/ensure-kestractl.sh`](scripts/ensure-kestractl.sh) — dry-run check + on-request install/upgrade |
 
 ## When to use
