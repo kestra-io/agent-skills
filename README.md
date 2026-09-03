@@ -107,6 +107,31 @@ Migrate an **Apache Airflow** DAG to a production-ready **Kestra** flow.
 
 Skill path: `skills/migrate-airflow-kestra/SKILL.md`
 
+## Install
+
+### As a Claude Code plugin (recommended)
+
+This repo is a self-registering [Claude Code](https://code.claude.com/docs/en/plugins)
+marketplace bundling every skill into one plugin, `kestra-agent-skills`:
+
+```text
+/plugin marketplace add kestra-io/agent-skills
+/plugin install kestra-agent-skills@kestra-io
+```
+
+Skills are then namespaced — `kestra-agent-skills:kestra-flow`,
+`kestra-agent-skills:kestra-ops`, and so on. Updates roll forward with the repo
+(no pinned `version`); re-run `/plugin marketplace update kestra-io` to pull the
+latest. CLI equivalents: `claude plugin marketplace add …` / `claude plugin install …`.
+
+### Manual copy
+
+Copy an individual skill into your skills directory:
+
+```bash
+cp -r skills/kestra-flow ~/.claude/skills/kestra-flow
+```
+
 ## Usage
 
 Load the skill and provide a concrete operational objective.
@@ -138,6 +163,9 @@ Use kestra-cicd to scaffold a GitHub Actions pipeline that validates flows/ on P
 ```
 .
 ├── README.md
+├── .claude-plugin/
+│   ├── plugin.json          # bundles skills/ as the kestra-agent-skills plugin
+│   └── marketplace.json     # self-registers the repo as the "kestra-io" marketplace
 └── skills/
     ├── kestra-flow/
     │   └── SKILL.md

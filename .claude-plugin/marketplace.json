@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "kestra-io",
+  "owner": {
+    "name": "Kestra",
+    "url": "https://github.com/kestra-io"
+  },
+  "plugins": [
+    {
+      "name": "kestra-agent-skills",
+      "source": "./",
+      "description": "Kestra agent skills — flow authoring, production hardening, kestractl operations, GitOps CI/CD, and Airflow migration.",
+      "homepage": "https://kestra.io/docs/ai-tools/agent-skills",
+      "repository": "https://github.com/kestra-io/agent-skills",
+      "keywords": ["kestra", "orchestration", "workflows", "kestractl", "mcp"]
+    }
+  ]
+}
