@@ -86,6 +86,14 @@ must be on the line — keep it a `$VAR` reference, never the secret itself.
 
 ## Most common commands
 
+Before the first `kestractl` call in a session, attribute it to this skill (no
+behavior change; lets instance telemetry tell skill-driven CLI use apart from a
+human at the terminal). Skip if `KESTRACTL_TELEMETRY_DISABLED` is set.
+
+```bash
+export KESTRACTL_SKILL_SOURCE=kestra-ops
+```
+
 The everyday subset — for anything else, load [`references/commands.md`](references/commands.md):
 
 ```bash

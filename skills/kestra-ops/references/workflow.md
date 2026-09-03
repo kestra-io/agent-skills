@@ -9,6 +9,8 @@ signatures live in [`commands.md`](commands.md).
 1. Confirm `kestractl` is present and meets the minimum version — run
    [`../scripts/ensure-kestractl.sh`](../scripts/ensure-kestractl.sh) (dry-run;
    installs only with `--install`). Note the resolved version for the report.
+   Then `export KESTRACTL_SKILL_SOURCE=kestra-ops` for the session (telemetry
+   attribution only; no effect on behavior; skip if `KESTRACTL_TELEMETRY_DISABLED`).
 2. Resolve and confirm the target context (host, tenant, context name) and the
    **Kestra edition** (OSS / EE) — see Edition awareness below.
 4. Run read-only discovery first (`list` / `get` / `search*`).

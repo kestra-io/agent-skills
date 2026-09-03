@@ -158,6 +158,24 @@ Use migrate-airflow-kestra to migrate dags/ingest_pipeline.py from Airflow to Ke
 Use kestra-cicd to scaffold a GitHub Actions pipeline that validates flows/ on PRs and deploys to prod.namespace on merge to main.
 ```
 
+## Telemetry
+
+When a skill here shells out to `kestractl`, `kestractl` fires its usual anonymous
+`cli_command_executed` PostHog event (command path, success, duration, versions,
+os/arch — no flow content, no secrets).
+
+To tell skill-driven CLI use apart from a human running `kestractl` directly, the
+`kestra-ops` and `migrate-airflow-kestra` skills `export KESTRACTL_SKILL_SOURCE=<skill-name>`
+before invoking it. Once a companion `kestractl` release reads that variable, it is
+attached as a `skill_source` property on the event (analogous to `ci_provider`).
+Until then the variable is simply ignored — nothing changes.
+
+**Opt out** of all `kestractl` telemetry:
+
+```bash
+export KESTRACTL_TELEMETRY_DISABLED=true
+```
+
 ## Structure
 
 ```

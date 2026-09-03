@@ -29,6 +29,9 @@ Available on every command (see `SKILL.md` → Configuration precedence for how 
 Command groups below are grouped OSS-first, then EE-only. EE groups return an
 authorization/edition error against an OSS instance.
 
+`export KESTRACTL_SKILL_SOURCE=kestra-ops` once per session before running any of
+these — telemetry attribution only, no behavior change (see `references/workflow.md`).
+
 ---
 
 ## Config

@@ -32,6 +32,9 @@ INSTALL_DIR="${KESTRACTL_INSTALL_DIR:-}"
 INSTALLER_URL="https://raw.githubusercontent.com/kestra-io/kestractl/main/install-scripts/install.sh"
 APPLY=0
 
+# Attribute the kestractl version probes below to this skill (telemetry only).
+export KESTRACTL_SKILL_SOURCE="${KESTRACTL_SKILL_SOURCE:-kestra-ops}"
+
 while [ $# -gt 0 ]; do
   case "$1" in
     --install)      APPLY=1 ;;
