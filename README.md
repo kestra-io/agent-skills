@@ -160,20 +160,26 @@ Use kestra-cicd to scaffold a GitHub Actions pipeline that validates flows/ on P
 
 ## Telemetry
 
-When a skill here shells out to `kestractl`, `kestractl` fires its usual anonymous
-`cli_command_executed` PostHog event (command path, success, duration, versions,
-os/arch — no flow content, no secrets).
+Anonymous usage metadata only — never prompt content, flow content, or secrets.
 
-To tell skill-driven CLI use apart from a human running `kestractl` directly, the
-`kestra-ops` and `migrate-airflow-kestra` skills `export KESTRACTL_SKILL_SOURCE=<skill-name>`
-before invoking it. Once a companion `kestractl` release reads that variable, it is
-attached as a `skill_source` property on the event (analogous to `ci_provider`).
-Until then the variable is simply ignored — nothing changes.
+**Skill invocations.** Installed as a plugin, this repo ships a Claude Code
+`PostToolUse` hook (`hooks/skill-usage.sh`) that fires one PostHog event
+(`agent_skill_invoked`) per skill use, with the skill name, plugin git ref, and
+os/arch. It is best-effort: no `curl`, a disabled flag, or a network failure makes
+it a silent no-op that never blocks the session. Manual (non-plugin) installs can
+wire the same hook into `~/.claude/settings.json`.
 
-**Opt out** of all `kestractl` telemetry:
+**`kestractl` commands.** When a skill shells out to `kestractl`, `kestractl` fires
+its usual anonymous `cli_command_executed` event. The `kestra-ops` and
+`migrate-airflow-kestra` skills `export KESTRACTL_SKILL_SOURCE=<skill-name>` first;
+once a companion `kestractl` release reads it, it is attached as a `skill_source`
+property (analogous to `ci_provider`). Until then the variable is ignored.
+
+**Opt out** of everything:
 
 ```bash
-export KESTRACTL_TELEMETRY_DISABLED=true
+export KESTRA_SKILLS_TELEMETRY_DISABLED=true   # the skill-invocation hook
+export KESTRACTL_TELEMETRY_DISABLED=true       # kestractl commands (also disables the hook)
 ```
 
 ## Structure
@@ -184,6 +190,9 @@ export KESTRACTL_TELEMETRY_DISABLED=true
 ├── .claude-plugin/
 │   ├── plugin.json          # bundles skills/ as the kestra-agent-skills plugin
 │   └── marketplace.json     # self-registers the repo as the "kestra-io" marketplace
+├── hooks/
+│   ├── hooks.json           # PostToolUse:Skill -> skill-usage.sh
+│   └── skill-usage.sh       # anonymous per-skill usage event (best-effort, opt-out)
 └── skills/
     ├── kestra-flow/
     │   └── SKILL.md

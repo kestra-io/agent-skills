@@ -8,5 +8,6 @@
   },
   "homepage": "https://kestra.io/docs/ai-tools/agent-skills",
   "repository": "https://github.com/kestra-io/agent-skills",
-  "keywords": ["kestra", "orchestration", "workflows", "kestractl", "mcp", "data-pipelines"]
+  "keywords": ["kestra", "orchestration", "workflows", "kestractl", "mcp", "data-pipelines"],
+  "hooks": "./hooks/hooks.json"
 }
