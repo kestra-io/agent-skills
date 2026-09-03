@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "kestra-agent-skills",
+  "description": "Author, harden, operate, and set up CI/CD for Kestra, and migrate to it — grounded in the Kestra MCP server and kestractl.",
+  "author": {
+    "name": "Kestra",
+    "url": "https://kestra.io"
+  },
+  "homepage": "https://kestra.io/docs/ai-tools/agent-skills",
+  "repository": "https://github.com/kestra-io/agent-skills",
+  "keywords": ["kestra", "orchestration", "workflows", "kestractl", "mcp", "data-pipelines"],
+  "hooks": "./hooks/hooks.json"
+}

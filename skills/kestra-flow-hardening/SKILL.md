@@ -1,7 +1,7 @@
 ---
 name: kestra-flow-hardening
-description: Audit one or more existing Kestra flows and add production-hardening controls — retries, timeouts, concurrency limits, error/finally/afterExecution handlers, SLAs, checks, and idempotency guards. Produces a severity-ranked findings report, then applies confirmed edits. Use when users ask to harden, audit, review, or make a flow more production-ready, resilient, or idempotent — not for authoring new flows (use kestra-flow).
-compatibility: Requires curl and network access to https://api.kestra.io/v1/plugins/schemas/flow. No Kestra instance required.
+description: Audit one or more existing Kestra flows and add production-hardening controls — retries, timeouts, concurrency limits, error/finally/afterExecution handlers, SLAs, checks, and idempotency guards. Also diagnoses flow/execution failures grounded in official docs. Produces a severity-ranked findings report, then applies confirmed edits. Use when users ask to harden, audit, review, or make a flow more production-ready, resilient, or idempotent, or to explain why a flow/execution failed — not for authoring new flows (use kestra-flow).
+compatibility: Requires the Kestra MCP server (`mcp__kestra__*` tools). No Kestra instance, and no multi-megabyte schema download, required.
 ---
 
 # Kestra Flow Hardening Skill
@@ -14,10 +14,14 @@ This is the **auditing** counterpart to the sibling skills:
 | Skill | Owns |
 |-------|------|
 | `kestra-flow` | **Authoring** — create / modify / debug flow YAML from intent |
-| **`kestra-flow-hardening`** | **Auditing** — find gaps, recommend + apply guardrails |
+| **`kestra-flow-hardening`** | **Auditing & diagnosis** — find gaps, recommend + apply guardrails; explain failures |
 | `kestra-ops` | **Operating** — validate / deploy / run via `kestractl` |
 
 Hand off to `kestra-flow` for "build a new flow" and to `kestra-ops` for "validate / deploy this".
+
+Two modes: **audit** (proactive — "harden this", Steps 1–8 below) and **troubleshoot**
+(reactive — "why did this fail?", see *Troubleshoot mode*). Both ground every claim
+in the same MCP tools.
 
 ## When to use
 
@@ -26,6 +30,11 @@ Trigger on requests to **harden, audit, review, or make production-ready / resil
 - "Audit my flow — what's missing for reliability?"
 - "Add retries, timeouts, and error handling to this flow."
 - "Review this namespace's flows for resilience gaps."
+
+…or to **diagnose a failure** (troubleshoot mode):
+- "This execution failed with `<error>` — why?"
+- "Why doesn't `{{ trigger.date }}` resolve in my flow?"
+- "My retry block is being rejected on deploy."
 
 Do **not** use this skill to author a brand-new flow from a description — that is `kestra-flow`.
 
@@ -40,15 +49,22 @@ Do **not** use this skill to author a brand-new flow from a description — that
 
 ## Workflow
 
-### Step 1 — Fetch the flow schema (authoritative)
+### Step 1 — Ground in the schema (authoritative, on demand)
 
-```bash
-curl -s https://api.kestra.io/v1/plugins/schemas/flow
-```
+All grounding goes through the `mcp__kestra__*` tools — no bulk schema fetch. If those
+tools are unavailable, stop and tell the user this skill requires the Kestra MCP server.
 
-Read the raw JSON. The schema is the **source of truth** for which properties and types
-exist in the target version. Never recommend a property absent from the schema — this is
-what catches version traps such as `retry.maxAttempt` (pre-0.24) vs `retry.maxAttempts`.
+- **Flow structure** — `mcp__kestra__list_doc_children` (`path: "docs/workflow-components"`)
+  for the component index and its version gates, then `mcp__kestra__get_doc` for the
+  components in play (e.g. `.../retries`, `.../errors`, `.../concurrency`, `.../sla`),
+  passing `version` when the user gave a Kestra version.
+- **Task / trigger types and properties** — `mcp__kestra__task_schema` with `cls: <FQCN>`
+  for every type referenced. This is the **source of truth** for which properties exist
+  in the target version; it is what catches version traps such as `retry.maxAttempt`
+  (pre-0.24) vs `retry.maxAttempts`.
+
+Never recommend (or accept) a property that is not in the `task_schema` / `get_doc`
+result for the target version.
 
 ### Step 2 — Confirm scope and context
 
@@ -115,8 +131,8 @@ toward better-maintained flows, not to gate anything.
   workloads, `Script` for quick iteration.
 - **Scripts duplicating plugin functionality → native plugin.** When a script reimplements
   something a Kestra plugin already does, recommend the native task — less custom code to
-  maintain. Pattern-match common usage to plugin families and **verify the task exists in the
-  fetched schema before naming it**:
+  maintain. Pattern-match common usage to plugin families and **verify the task exists via
+  `mcp__kestra__task_schema` before naming it**:
   - `curl` / `wget` / `requests` → `io.kestra.plugin.core.http.Request` / `Download`
   - `psql` / `mysql` / `sqlite3` → the matching JDBC plugin (`io.kestra.plugin.jdbc.*`)
   - `aws` / `gcloud` / `az` CLI → the cloud plugins (`io.kestra.plugin.aws|gcp|azure.*`)
@@ -171,7 +187,7 @@ Format (findings numbered **globally** so the user can select by number):
   Move the ~40-line script into a Namespace File and call it from a `Commands` task
   (versioned, testable, editable in the Code Editor).
 - **Script duplicates a plugin** — `tasks.fetch`
-  This `curl` shell task can be `io.kestra.plugin.core.http.Request` (verified in schema).
+  This `curl` shell task can be `io.kestra.plugin.core.http.Request` (verified via `task_schema`).
 
 ---
 Summary: N Critical · N High · N Medium · N Low · N Advisory
@@ -189,9 +205,59 @@ Reply with the numbers to apply (e.g. `1,4,7`), `all`, or `none`.
 On `apply 1,4,7` / `all`:
 - **Surgical, structure-preserving edits.** Touch only the relevant tasks / blocks. Preserve root `id` / `namespace`, task ordering, and comments. Never restructure unrelated parts.
 - **File input** → edit the file in place. **Pasted YAML** → return the modified YAML. **Batch** → edit each file.
-- **Re-validate** every edit against the fetched schema (properties and types must exist).
+- **Re-validate** every edit against `mcp__kestra__task_schema` / `get_doc` (properties and types must exist in the target version).
 - The initial number-selection **is** informed consent (the report already stated each risk / caveat) — do not re-prompt per finding, but show the diff as you apply it.
 - Suggest `kestractl flow validate` (via `kestra-ops`) as an optional final gate; do not require a live instance.
+
+## Troubleshoot mode (reactive)
+
+Use this path when the input is a **failure** — an error message, a failed task log,
+a rejected deploy, or a "why doesn't X work" question — rather than a request to
+audit. It is the same schema discipline as the audit, run against a concrete symptom.
+
+Reason from the docs and schema, not from memory — Kestra changes fast enough that a
+training-data answer is a real risk.
+
+### T1 — Capture the symptom and context
+
+- The exact error text / stack / rejected snippet, and which task or property it names.
+- **Kestra version and edition.** Ask if unknown; default latest OSS. Version is
+  load-bearing here — most traps are "this changed in version N".
+- The relevant flow YAML fragment if available.
+
+### T2 — Ground the diagnosis
+
+1. `mcp__kestra__search_docs` with `q` = key terms from the error, and `version` set
+   to the user's Kestra version. Fetch the top hit(s) with `mcp__kestra__get_doc`
+   (`version` pinned).
+2. For any task / trigger / property the error references, call
+   `mcp__kestra__task_schema` (`cls: <FQCN>`) and check whether the property exists,
+   is spelled correctly, is deprecated (`$deprecated`), or moved.
+3. Check `references/troubleshooting.md` for the failure signature — it maps common
+   symptoms to the doc page and the schema check that confirms them. It is a starting
+   map, not a substitute for step 1–2 against the running version.
+4. For a "not found" plugin/type, confirm availability with `mcp__kestra__versions`
+   (see `kestra-flow`'s *Resolving plugins and backends*).
+
+### T3 — Report
+
+```
+## Diagnosis: <one-line root cause>
+
+Symptom: <the error, trimmed>
+Root cause: <what's actually wrong>, confirmed against
+  <doc page> (v<X.Y>) and `task_schema` for <FQCN>.
+Fix: <the minimal change> 
+  <before / after snippet>
+Notes: <version/edition caveats, related traps to check>
+```
+
+- Cite the doc page and version you used. If the docs and the observed behavior
+  disagree, say so rather than guessing.
+- If the fix is a flow edit and the user wants it applied, hand off to the audit
+  path's Step 8 (surgical, schema-re-validated edit).
+- If the root cause is operational (bad credentials, instance unreachable, deploy
+  failure), name it and hand off to `kestra-ops`.
 
 ## Shared rules (inherited from `kestra-flow`)
 
@@ -200,6 +266,10 @@ Do not restate — reuse the `kestra-flow` skill's rules so they don't drift:
 - No hardcoded secrets / credentials — use `inputs` of type `SECRET` or `{{ secret('...') }}`.
 - Quoting — prefer double quotes; single quotes inside when needed.
 - Structural preservation — touch only the relevant part; preserve `id` / `namespace`.
+- Resolving plugins and backends — when a finding recommends a task runner, storage,
+  secret manager, log shipper, or replacement plugin, resolve its FQCN and check
+  version compatibility via the MCP tools per `kestra-flow`'s
+  *Resolving plugins and backends* section. Never name a plugin from memory.
 
 ## Example prompts
 
@@ -208,3 +278,6 @@ Do not restate — reuse the `kestra-flow` skill's rules so they don't drift:
 - "Review all flows in `./flows/` for resilience gaps and rank them worst-first."
 - "Make this scheduled flow idempotent — it sometimes runs twice." *(idempotency tier judgment)*
 - "Add alerting and an SLA to this business-critical flow."
+- "This execution failed with `Invalid property 'maxAttempt'` — why, and what's the fix?" *(troubleshoot)*
+- "Why is my `{{ trigger.date }}` expression empty at runtime?" *(troubleshoot)*
+- "`kestractl flow validate` rejects my `finally` block on 0.20 — explain." *(troubleshoot)*

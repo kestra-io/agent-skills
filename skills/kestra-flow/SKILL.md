@@ -1,7 +1,7 @@
 ---
 name: kestra-flow
-description: Generate, modify, or debug Kestra Flow YAML by fetching the live flow schema and applying the same guardrails used by the Kestra AI Copilot. Use when users ask to create, write, update, or fix a Kestra flow.
-compatibility: Requires curl and network access to https://api.kestra.io/v1/plugins/schemas/flow. No Kestra instance required.
+description: Generate, modify, or debug Kestra Flow YAML grounded in the live schema via the Kestra MCP server, applying the same guardrails used by the Kestra AI Copilot. Use when users ask to create, write, update, or fix a Kestra flow.
+compatibility: Requires the Kestra MCP server (`mcp__kestra__*` tools). No Kestra instance, and no multi-megabyte schema download, required.
 ---
 
 # Kestra Flow Skill
@@ -19,21 +19,62 @@ Use this skill when the request includes:
 
 - A description of the desired flow behavior
 - Namespace (and tenant ID if applicable)
+- Kestra version, if known — used to pin `get_doc` lookups; default to latest
+- Kestra edition (OSS / EE), if known — gates EE-only blueprints
 - Existing flow YAML if the request is a modification
 
 ## Workflow
 
-### Step 1 — Fetch the flow schema
+All schema grounding goes through the `mcp__kestra__*` tools — load only what the
+flow needs, when it needs it. There is no bulk schema fetch. If those tools are not
+available, stop and tell the user this skill requires the Kestra MCP server.
 
-Fetch the full schema with `curl` and read it directly — do not pipe it through any interpreter:
+> Security: this skill does not `curl` or otherwise fetch a live external schema
+> document to steer generation. Grounding comes only from the Kestra MCP server's
+> typed, scoped tool calls — no unverified third-party payload in the loop.
 
-```bash
-curl -s https://api.kestra.io/v1/plugins/schemas/flow
-```
+### Step 1 — Start from a blueprint when one fits
 
-Read the raw JSON output to validate every type, property name, and structure used in the output. Do not generate anything before the schema is available.
+Kestra ships production-vetted flow templates. Reusing one beats generating from a
+blank schema — fewer invented task combinations.
 
-### Step 2 — Collect context
+1. `mcp__kestra__blueprints` with `query` derived from the user's intent. Narrow with
+   `tags` and/or `types` (task-type FQCNs) once known — resolve FQCNs the same way as
+   Step 3.
+2. Judge the results by `title`, `description`, and `includedTasks`. A blueprint is a
+   good starting point only if it covers most of the requested behavior.
+   - **EE gate:** if a candidate has `ee: true` and the user is on OSS, do not offer
+     it — say an EE-only blueprint exists but was skipped. If the edition is unknown,
+     ask before using an `ee: true` blueprint.
+3. For the closest match, `mcp__kestra__get_blueprint_flow` with its `id` to get the
+   full YAML, then **adapt** rather than accept as-is:
+   - set `id` / `namespace` to the user's values
+   - replace any inline credentials, tokens, or hostnames with `{{ secret('...') }}`
+     or `SECRET`-typed `inputs`
+   - remove tasks unrelated to the request; tune parameters to match it
+4. If no blueprint is a close fit, skip to Step 2 and generate from the schema. Do
+   **not** force-fit a loosely related blueprint.
+
+Whether adapted from a blueprint or generated fresh, the result still passes through
+Step 4 schema validation — blueprints can lag the running version's schema.
+
+### Step 2 — Load flow structure (on demand)
+
+The flow-level shape (`id`, `namespace`, `inputs`, `variables`, `tasks`, `triggers`,
+`errors`, `finally`, `afterExecution`, `pluginDefaults`, `concurrency`, `sla`,
+`checks`, `disabled`, `labels`, `retry`) comes from the docs, pinned to the user's
+Kestra version:
+
+- `mcp__kestra__list_doc_children` with `path: "docs/workflow-components"` — the
+  component index; each entry's metadata carries the version gate (e.g. `checks`
+  `>= 1.2.0`, `sla` `>= 0.20.0`).
+- `mcp__kestra__get_doc` for **only** the components this flow uses (e.g.
+  `docs/workflow-components/inputs`, `.../triggers`, `.../errors`, `.../retries`,
+  `.../concurrency`). Pass `version` when the user gave a Kestra version.
+
+Do not assume a component exists in the target version — check the gate first.
+
+### Step 3 — Collect context and resolve task/trigger types
 
 Identify from the user message or conversation:
 - `id` — flow identifier (preserve if provided)
@@ -41,14 +82,53 @@ Identify from the user message or conversation:
 - Existing flow YAML (for modification requests)
 - Whether this is an **addition / deletion / modification** or a **full rewrite**
 
-### Step 3 — Generate the YAML
+Resolve every task / trigger / backend to a real FQCN — never guess one. See
+[Resolving plugins and backends](#resolving-plugins-and-backends) below.
 
-Apply all generation rules below, then output raw YAML only.
+### Step 4 — Fetch the per-task schema, then generate
+
+For **every** task and trigger type in the flow, call
+`mcp__kestra__task_schema` with `cls: <FQCN>` and validate every property name,
+enum value, required field, and output reference against it. Do not write a task
+before its `task_schema` is loaded.
+
+Then apply all generation rules below and output raw YAML only.
+
+## Resolving plugins and backends
+
+Never type a plugin, task, or backend FQCN from memory — the plugin ecosystem
+changes fast. Resolve it through the MCP tools first, then validate with
+`task_schema` (Step 4). This section is also referenced by `kestra-flow-hardening`
+when auditing an existing flow's plugin choices.
+
+**Requirement → tool.** Recommend only FQCNs returned by these:
+
+| The flow needs… | Tool |
+|-----------------|------|
+| A task for some intent | `mcp__kestra__search` (`type: "PLUGINS"`) or `mcp__kestra__list_plugins` → `mcp__kestra__plugin_tasks` |
+| A task runner (Kubernetes, AWS Batch, GCP Batch, Docker, …) | `mcp__kestra__list_task_runners` |
+| An internal storage backend (S3, GCS, Azure Blob, MinIO, …) | `mcp__kestra__list_storages` |
+| A secret manager backend (Vault, AWS/GCP/Azure, 1Password, CyberArk, …) | `mcp__kestra__list_secret_managers` |
+| A log shipper / exporter | `mcp__kestra__list_log_exporters` |
+| A trigger type | `mcp__kestra__list_triggers` |
+
+**Check version compatibility before recommending.**
+- `mcp__kestra__versions` (optionally `plugin: <name>`) — the plugin versions
+  available on the instance. A plugin absent from the output may not be installed —
+  say so rather than assuming it is.
+- `mcp__kestra__plugin_versions` with the repo name (e.g. `plugin-aws`) — full
+  release history and the Kestra version each release targets. Use it to flag a
+  compatibility gap against the user's Kestra version.
+
+**Prefer non-deprecated.** If `task_schema` marks a type or property `$deprecated`,
+use the current replacement and note the change.
 
 ## Generation rules
 
 **Schema compliance**
-- Use only task types and properties explicitly defined in the fetched schema. Never invent or guess types or property names.
+- Use only task/trigger types and properties present in the `mcp__kestra__task_schema`
+  response for that type. Never invent or guess types or property names.
+- Use only flow-level properties confirmed via `get_doc` for the target version.
 - Property keys must be unique within each task or block.
 
 **Structural preservation**
@@ -90,7 +170,8 @@ Apply all generation rules below, then output raw YAML only.
 - Prefer double quotes; use single quotes inside double-quoted strings when needed.
 
 **Error handling**
-- If the request cannot be fulfilled using only schema-defined types and properties, output exactly:
+- If the request cannot be fulfilled using only types and properties confirmed via
+  `mcp__kestra__task_schema` / `get_doc`, output exactly:
   ```
   I cannot generate a valid Kestra Flow YAML for this request based on the available schema.
   ```
