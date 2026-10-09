@@ -1,0 +1,130 @@
+# Kestra 2.0.5 standalone example. See ../README.md before use.
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.4
+    restart: unless-stopped
+    mem_limit: 1536m
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: 'false'
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+    volumes:
+    - elasticsearch-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - curl --fail --silent 'http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s' > /dev/null
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 30s
+  kafka:
+    image: apache/kafka:3.9.1
+    restart: unless-stopped
+    mem_limit: 1g
+    environment:
+      KAFKA_NODE_ID: '1'
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: '1'
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: '1'
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: '1'
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_HEAP_OPTS: -Xms256m -Xmx512m
+    volumes:
+    - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - /opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server kafka:9092 > /dev/null
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 30s
+  kestra:
+    image: ${KESTRA_IMAGE:-registry.kestra.io/docker/kestra-ee:v2.0.5}
+    restart: unless-stopped
+    user: root
+    command:
+    - server
+    - standalone
+    stop_grace_period: 6m
+    cpus: 2
+    mem_limit: 4g
+    environment:
+      KESTRA_USERNAME: ${KESTRA_USERNAME:?Set KESTRA_USERNAME to an email address}
+      KESTRA_PASSWORD: ${KESTRA_PASSWORD:?Set a strong KESTRA_PASSWORD}
+      KESTRA_ENCRYPTION_KEY: ${KESTRA_ENCRYPTION_KEY:?Generate a base64 encoded 32-byte key}
+      KESTRA_URL: ${KESTRA_URL:-http://localhost:8080}
+      KESTRA_LICENSE_ID: ${KESTRA_LICENSE_ID:?Supply your Enterprise license value}
+      KESTRA_LICENSE_FINGERPRINT: ${KESTRA_LICENSE_FINGERPRINT:?Supply your Enterprise license value}
+      KESTRA_LICENSE_KEY: ${KESTRA_LICENSE_KEY:?Supply your Enterprise license value}
+      JAVA_OPTS: -Xms512m -Xmx2g
+      KESTRA_CONFIGURATION: |
+        kestra:
+          allocated-cpu-cores: 2
+          server:
+            basic-auth:
+              username: $${KESTRA_USERNAME}
+              password: $${KESTRA_PASSWORD}
+          encryption:
+            secret-key: $${KESTRA_ENCRYPTION_KEY}
+          repository:
+            type: elasticsearch
+          queue:
+            type: kafka
+          storage:
+            type: local
+            local:
+              base-path: /app/storage
+          tasks:
+            tmp-dir:
+              path: /tmp/kestra-wd/tmp
+          url: $${KESTRA_URL}
+          ee:
+            license:
+              id: $${KESTRA_LICENSE_ID}
+              fingerprint: $${KESTRA_LICENSE_FINGERPRINT}
+              key: $${KESTRA_LICENSE_KEY}
+          elasticsearch:
+            client:
+              http-hosts: http://elasticsearch:9200
+          kafka:
+            client:
+              properties:
+                bootstrap.servers: kafka:9092
+            defaults:
+              topic:
+                partitions: 3
+                replication-factor: 1
+    ports:
+    - 127.0.0.1:${KESTRA_PORT:-8080}:8080
+    volumes:
+    - kestra-data:/app/storage
+    - kestra-work:/tmp/kestra-wd
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - --fail
+      - --silent
+      - http://localhost:8081/health
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 60s
+volumes:
+  kestra-data: {}
+  kestra-work: {}
+  elasticsearch-data: {}
+  kafka-data: {}
