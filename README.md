@@ -5,6 +5,25 @@ A curated collection of agent skills for operating Kestra environments.
 
 ## Available skills
 
+### kestra-install
+
+Provision or configure a non-managed Kestra server, then hand off to `kestra-ops`
+once it is reachable.
+
+**Use when:**
+- Installing Kestra on a standalone host, Docker Compose, or Kubernetes
+- Reconfiguring server storage, secret manager, repository, or queue
+
+**Covers:**
+- Version/edition-aware intake and target routing
+- Compose recipe selection and Kubernetes evaluation vs. production choices
+- Explicit interfaces for upcoming installation references; official-documentation fallback where procedures are not yet bundled
+- Reachability verification and an operations handoff
+
+Skill path: `skills/kestra-install/SKILL.md`
+
+---
+
 ### kestra-flow
 
 Generate, modify, or debug Kestra Flow YAML grounded in the live flow schema — the same way the Kestra AI Copilot does.
@@ -108,6 +127,10 @@ Load the skill and provide a concrete operational objective.
 Examples:
 
 ```text
+Use kestra-install to spin up a local OSS evaluation with Docker Compose; I have no backend preference.
+```
+
+```text
 Use kestra-flow to write a flow that polls a REST API every 30 minutes and stores the result in KV store.
 ```
 
@@ -137,6 +160,10 @@ Use migrate-airflow-kestra to migrate dags/ingest_pipeline.py from Airflow to Ke
     │       └── hardening-patterns.md
     ├── kestra-ops/
     │   └── SKILL.md
+    ├── kestra-install/
+    │   ├── SKILL.md
+    │   └── references/
+    │       └── routing.md
     ├── migrate-airflow-kestra/
     │   └── SKILL.md
     └── migrate-kestra-2/
