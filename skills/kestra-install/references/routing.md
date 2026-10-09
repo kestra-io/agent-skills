@@ -10,7 +10,7 @@ an issue link describes planned work, not a procedure already available locally.
 | Target and intent | Route | Detailed procedure |
 | --- | --- | --- |
 | Standalone host | Non-container JVM installation; confirm OS, architecture and the selected version's Java requirement | [Host installation](https://kestra.io/docs/installation/standalone-server), implementation tracked in [#28](https://github.com/kestra-io/agent-skills/issues/28) |
-| Docker Compose | Choose a compatible recipe below; confirm Docker/Compose and available resources/ports | [Compose installation](https://kestra.io/docs/installation/docker-compose), recipes tracked in [#27](https://github.com/kestra-io/agent-skills/issues/27) |
+| Docker Compose | Choose a compatible recipe below; confirm Docker/Compose and available resources/ports | [Bundled recipe guide](docker-compose/README.md), plus [official Compose installation](https://kestra.io/docs/installation/docker-compose) |
 | Kubernetes, quick evaluation without existing backends | `kestra-starter` chart with bundled backends | [Kubernetes installation](https://kestra.io/docs/installation/kubernetes), tracked in [#29](https://github.com/kestra-io/agent-skills/issues/29) |
 | Kubernetes, production or existing backends | Production `kestra` chart with bring-your-own backends; retain the user's existing PostgreSQL/object storage choices when supported | Same Kubernetes documentation and [#29](https://github.com/kestra-io/agent-skills/issues/29) |
 
@@ -21,7 +21,8 @@ which environment they can operate; do not choose Kubernetes solely for scale.
 
 ## Compose recipe decision
 
-The four recipe identifiers are the interfaces requested by #27. Select the
+The four recipe identifiers have [bundled templates](docker-compose/README.md)
+for Kestra 2.0.5. Select the
 fewest moving parts that meet the user's requirements, after checking version
 and edition compatibility:
 

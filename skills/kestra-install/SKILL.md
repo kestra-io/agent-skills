@@ -7,8 +7,8 @@ description: Use when provisioning or configuring a new non-managed Kestra serve
 
 Get a non-managed Kestra instance configured and reachable. Use the short intake
 below, then load only the relevant section of [references/routing.md](references/routing.md).
-This scaffold establishes routing; target-specific procedures are tracked in the
-linked sibling issues and are not all bundled yet.
+Compose recipes are bundled; other target-specific procedures are tracked in
+the linked sibling issues and are not all bundled yet.
 
 ## Required inputs
 
@@ -32,6 +32,8 @@ executions when changing backends.
    Preserve existing backend choices when compatible. Check the selected
    version's official documentation and edition support before generating
    configuration; do not assume one version's backend keys apply to another.
+   For Docker Compose, load [the recipe guide](references/docker-compose/README.md)
+   and the selected recipe's YAML and example environment.
 2. **Use the matching installation guidance.** Read bundled references when
    available. Where a sibling implementation is still absent, state that gap
    and use the linked official documentation for the chosen version. Do not

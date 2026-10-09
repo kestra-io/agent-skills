@@ -1,0 +1,122 @@
+# Kestra 2.0.5 standalone example. See ../README.md before use.
+services:
+  postgres:
+    image: postgres:16.13
+    restart: unless-stopped
+    mem_limit: 512m
+    environment:
+      POSTGRES_DB: kestra
+      POSTGRES_USER: kestra
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+    - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+  redis:
+    image: redis:7.4.6
+    restart: unless-stopped
+    mem_limit: 256m
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD}
+    command:
+    - sh
+    - -c
+    - exec redis-server --appendonly yes --requirepass "$${REDIS_PASSWORD}"
+    volumes:
+    - redis-data:/data
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - REDISCLI_AUTH="$${REDIS_PASSWORD}" redis-cli ping | grep -q PONG
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  kestra:
+    image: ${KESTRA_IMAGE:-registry.kestra.io/docker/kestra-ee:v2.0.5}
+    restart: unless-stopped
+    user: root
+    command:
+    - server
+    - standalone
+    stop_grace_period: 6m
+    cpus: 2
+    mem_limit: 4g
+    environment:
+      KESTRA_USERNAME: ${KESTRA_USERNAME:?Set KESTRA_USERNAME to an email address}
+      KESTRA_PASSWORD: ${KESTRA_PASSWORD:?Set a strong KESTRA_PASSWORD}
+      KESTRA_ENCRYPTION_KEY: ${KESTRA_ENCRYPTION_KEY:?Generate a base64 encoded 32-byte key}
+      KESTRA_URL: ${KESTRA_URL:-http://localhost:8080}
+      KESTRA_LICENSE_ID: ${KESTRA_LICENSE_ID:?Supply your Enterprise license value}
+      KESTRA_LICENSE_FINGERPRINT: ${KESTRA_LICENSE_FINGERPRINT:?Supply your Enterprise license value}
+      KESTRA_LICENSE_KEY: ${KESTRA_LICENSE_KEY:?Supply your Enterprise license value}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD}
+      JAVA_OPTS: -Xms512m -Xmx2g
+      KESTRA_CONFIGURATION: |
+        kestra:
+          allocated-cpu-cores: 2
+          server:
+            basic-auth:
+              username: $${KESTRA_USERNAME}
+              password: $${KESTRA_PASSWORD}
+          encryption:
+            secret-key: $${KESTRA_ENCRYPTION_KEY}
+          repository:
+            type: postgres
+          queue:
+            type: redis
+          storage:
+            type: local
+            local:
+              base-path: /app/storage
+          tasks:
+            tmp-dir:
+              path: /tmp/kestra-wd/tmp
+          url: $${KESTRA_URL}
+          ee:
+            license:
+              id: $${KESTRA_LICENSE_ID}
+              fingerprint: $${KESTRA_LICENSE_FINGERPRINT}
+              key: $${KESTRA_LICENSE_KEY}
+          redis:
+            client:
+              url: redis://redis:6379
+              password: $${REDIS_PASSWORD}
+        datasources:
+          postgres:
+            url: jdbc:postgresql://postgres:5432/kestra
+            driver-class-name: org.postgresql.Driver
+            username: kestra
+            password: $${POSTGRES_PASSWORD}
+    ports:
+    - 127.0.0.1:${KESTRA_PORT:-8080}:8080
+    volumes:
+    - kestra-data:/app/storage
+    - kestra-work:/tmp/kestra-wd
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - --fail
+      - --silent
+      - http://localhost:8081/health
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 60s
+volumes:
+  kestra-data: {}
+  kestra-work: {}
+  postgres-data: {}
+  redis-data: {}
