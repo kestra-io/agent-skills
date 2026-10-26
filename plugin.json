@@ -1,0 +1,36 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "kestra",
+  "version": "0.1.0",
+  "description": "Write, harden, migrate and operate Kestra flows, grounded in the live Kestra plugin schema and docs.",
+  "author": {
+    "name": "Kestra",
+    "url": "https://kestra.io"
+  },
+  "homepage": "https://kestra.io",
+  "repository": "https://github.com/kestra-io/agent-skills",
+  "license": "Apache-2.0",
+  "keywords": ["kestra", "workflow", "orchestration", "yaml", "airflow", "data-pipelines"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Kestra",
+        "shortDescription": "Write and run Kestra flows",
+        "longDescription": "Kestra is an open-source, event-driven orchestration platform. This plugin lets ChatGPT and Codex write schema-valid Kestra flow YAML, audit and harden existing flows for production, migrate Airflow DAGs to Kestra, and guide a Kestra 1.3 to 2.0 upgrade. It connects to the public Kestra MCP server to look up plugins, task schemas, docs and blueprints, so generated flows only use task types and properties that actually exist. In Codex, the kestra-ops skill also validates and deploys flows and runs executions through kestractl.",
+        "developerName": "Kestra",
+        "category": "Developer Tools",
+        "capabilities": ["Read"],
+        "websiteURL": "https://kestra.io",
+        "privacyPolicyURL": "https://kestra.io/privacy-policy",
+        "defaultPrompt": [
+          "Use Kestra to write a flow that pulls a REST API every hour and loads the result into Postgres.",
+          "Use Kestra to harden this flow for production.",
+          "Use Kestra to migrate this Airflow DAG to a Kestra flow."
+        ],
+        "brandColor": "#8405FF",
+        "composerIcon": "./assets/icon.png",
+        "logo": "./assets/logo.png"
+      }
+    }
+  }
+}

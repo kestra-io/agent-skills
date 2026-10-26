@@ -101,6 +101,37 @@ Migrate an **Apache Airflow** DAG to a production-ready **Kestra** flow.
 
 Skill path: `skills/migrate-airflow-kestra/SKILL.md`
 
+## Install
+
+### Any agent supporting the Agent Skills spec (Claude Code, Cursor, ...)
+
+```bash
+npx skills add kestra-io/agent-skills
+```
+
+### ChatGPT and Codex (plugin)
+
+The repo root is also an [Agent Plugins](https://agent-plugins.org) package for ChatGPT and Codex: `plugin.json` is the manifest, `skills/` is picked up as is, and `mcp.json` connects the public Kestra MCP server (`https://api.kestra.io/v1/mcp`, no auth) for plugin, task schema, docs and blueprint lookups.
+
+Codex CLI:
+
+```bash
+codex plugin marketplace add kestra-io/agent-skills
+codex plugin add kestra@kestra-agent-skills
+```
+
+ChatGPT desktop: clone the repo, add it as a repo marketplace (`.agents/plugins/marketplace.json` is included), restart the app and install **Kestra** from the Plugins directory. Workspace admins can then publish it to the workspace from **Plugins > Personal**.
+
+| Skill | ChatGPT | Codex |
+|---|---|---|
+| `kestra-flow` | Yes | Yes |
+| `kestra-flow-hardening` | Yes | Yes |
+| `migrate-airflow-kestra` | Yes | Yes |
+| `migrate-kestra-2` | Guidance only (no shell) | Yes |
+| `kestra-ops` | No, needs `kestractl` and a shell | Yes |
+
+`kestra-ops` on ChatGPT will need a remote MCP server over the Kestra API with OAuth.
+
 ## Usage
 
 Load the skill and provide a concrete operational objective.
@@ -128,6 +159,11 @@ Use migrate-airflow-kestra to migrate dags/ingest_pipeline.py from Airflow to Ke
 ```
 .
 ├── README.md
+├── plugin.json              # ChatGPT / Codex plugin manifest
+├── mcp.json                 # public Kestra MCP server
+├── assets/                  # plugin icon and logo
+├── .agents/plugins/
+│   └── marketplace.json     # local marketplace entry for testing
 └── skills/
     ├── kestra-flow/
     │   └── SKILL.md
