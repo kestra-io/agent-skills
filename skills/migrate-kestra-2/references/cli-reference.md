@@ -79,7 +79,7 @@ Raw-API fallbacks (also the cure for client-model skew — `executions list` can
 
 ```bash
 curl -u <u>:<p> -X POST "<host>/api/v1/<tenant>/executions/<namespace>/<flow>" -H 'Content-Type: multipart/form-data' [-F <input>=<value>]
-curl -u <u>:<p> "<host>/api/v1/<tenant>/executions/search?namespace=<ns>&size=50"
+curl -g -u <u>:<p> "<host>/api/v1/<tenant>/executions/search?filters[namespace][EQUALS]=<ns>&size=50"
 ```
 
 **Field gotchas** (observed against real instances):
