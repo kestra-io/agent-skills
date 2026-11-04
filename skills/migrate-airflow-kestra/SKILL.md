@@ -9,6 +9,19 @@ compatibility: Requires curl and network access to https://api.kestra.io/v1/plug
 
 Migrate an **Apache Airflow** DAG file to a production-ready **Kestra** flow with proper namespace files, correct task ordering, and schema-validated YAML.
 
+Never emit the legacy constructs below — they fail to parse, even if older docs, blueprints or examples use them:
+
+| Never emit | Use instead |
+|---|---|
+| `ForEach`, `ForEachItem`, `EachSequential`, `EachParallel` | `io.kestra.plugin.core.flow.Loop` |
+| `pluginDefaults` (flow-level) | Set the values on each task, or hoist shared values into flow `variables:` |
+| `conditions:` on a trigger | `when:` Pebble expression |
+| Flow trigger `preconditions` / `multipleConditions` | `dependsOn` + `window` + `mode` |
+| `json()` Pebble function | `fromJson()` |
+| `taskrun.value` / `parent.taskrun.value` | `item.value` (inside a `Loop`) |
+| `runner:` property | `taskRunner:` or `containerImage` |
+| Listeners, Templates, `core.trigger.Toggle`, `scripts.nashorn.*` | Flow triggers, Subflows, the API, `graalvm.*` |
+
 ## When to use
 
 Use this skill when the request involves **migrating from Apache Airflow to Kestra**, including:
@@ -37,6 +50,8 @@ Read the DAG file in full. Extract:
 3. **Dependencies**: map `>>` operators, `set_upstream`/`set_downstream` calls, and direct task invocations into an ordered dependency graph
 4. **Parallelism**: identify tasks that share the same upstream and have no dependency on each other — these must be wrapped in `io.kestra.plugin.core.flow.Parallel`
 5. **Data passing**: identify XCom pushes/pulls or return values passed between tasks — these become `outputFiles` → `inputFiles` in Kestra
+6. **Control flow and cross-DAG links**: dynamic task mapping (`.expand()`), branching (`BranchPythonOperator`, `@task.branch`), sensors, Datasets, `TriggerDagRunOperator`, `trigger_rule`, callbacks. Map them with the [Airflow construct mapping](#airflow-construct-mapping) table
+7. **`default_args`**: `retries`, `retry_delay`, `execution_timeout` etc. apply to every task — Kestra has no `pluginDefaults`, so these are set on each task
 
 ### Step 2 — Fetch and validate the Kestra schema
 
@@ -44,26 +59,30 @@ Read the DAG file in full. Extract:
 curl -s https://api.kestra.io/v1/plugins/schemas/flow -o /tmp/kestra_schema.json
 ```
 
-Extract the definitions needed for this flow:
+If the user has a Kestra instance, prefer its own schema (`GET <host>/api/v1/plugins/schemas/flow`, tenant-less path) — it matches the plugins actually installed.
+
+Extract the definitions needed for this flow. Add `Loop`, `If`, `Switch`, `Subflow` or `trigger.Flow` to `needed` when Step 1 found the matching Airflow constructs:
 
 ```bash
 python3 -c "
+import json
+defs = json.load(open('/tmp/kestra_schema.json'))['definitions']
 needed = [
     'io.kestra.plugin.scripts.python.Commands',
     'io.kestra.plugin.core.flow.Parallel',
-    'io.kestra.plugin.core.flow.WorkingDirectory',
     'io.kestra.plugin.core.trigger.Schedule',
 ]
-content = open('/tmp/kestra_schema.json').read()
 for t in needed:
-    idx = content.find(f'\"{ t }\"')
-    if idx >= 0:
-        print(f'=== {t} ===')
-        print(content[idx:idx+3000])
+    d = defs[t]
+    print(f'=== {t} ===')
+    print('required:', d.get('required', []))
+    for name, prop in sorted(d.get('properties', {}).items()):
+        flag = ' (deprecated)' if prop.get('\$deprecated') else ''
+        print(f'  {name}{flag}')
 "
 ```
 
-Do not generate any YAML until schema definitions have been read and validated.
+Do not generate any YAML until schema definitions have been read and validated. Never use a property flagged `(deprecated)`. `taskRunner` shows as required on script tasks but defaults to Docker — omit it and set `containerImage` instead.
 
 ### Step 3 — Create namespace files
 
@@ -153,7 +172,7 @@ This is the single most important formatting rule. Every task block in `tasks:` 
   type: io.kestra.plugin.scripts.python.Commands
 ```
 
-This rule applies everywhere a task appears: top-level `tasks:`, inside `Parallel.tasks:`, inside `WorkingDirectory.tasks:`, and in `triggers:` blocks. No exceptions.
+This rule applies everywhere a task appears: top-level `tasks:`, inside `Parallel.tasks:`, `Loop.tasks:`, `If.then:`/`else:`, `Switch.cases:`, and in `triggers:` blocks. No exceptions.
 
 ### Container image — always `python:3.11`
 
@@ -219,6 +238,23 @@ Tasks with a shared upstream and no mutual dependency must be wrapped in `io.kes
 
 Tasks that are independent at the fetch/ingest stage should also run in parallel.
 
+### Airflow construct mapping
+
+| Airflow | Kestra |
+|---|---|
+| Dynamic task mapping (`task.expand(x=[...])`) | `io.kestra.plugin.core.flow.Loop` with `values:`; reference the element as `{{ item.value }}` (use `fromJson(item.value).field` for objects). `concurrencyLimit: 0` for unlimited parallel mapping, `1` for sequential |
+| Results of mapped tasks consumed downstream | Declare `outputs:` on the `Loop`; read `outputs.<loop_id>.outputs` after it |
+| `BranchPythonOperator` / `@task.branch` | `io.kestra.plugin.core.flow.If` (two branches) or `Switch` (several) |
+| `ShortCircuitOperator` | `runIf:` on the downstream task, or an `If` |
+| `ExternalTaskSensor` / Dataset-scheduled DAG | `io.kestra.plugin.core.trigger.Flow` with `dependsOn:` (`flowId`, `namespace`, `states`); add `window:` + `mode:` when several upstreams must complete |
+| `TriggerDagRunOperator` | `io.kestra.plugin.core.flow.Subflow` |
+| `default_args.retries` + `retry_delay` | `retry: {type: constant, maxAttempts: <retries + 1>, interval: <retry_delay as ISO-8601, e.g. PT5M>}` on each task |
+| `execution_timeout` | `timeout:` (ISO-8601 duration) on the task |
+| `on_failure_callback` | flow-level `errors:` tasks |
+| `trigger_rule="all_done"` (cleanup) | flow-level `finally:` tasks |
+
+Inside a `Loop`, each iteration is an isolated sub-execution: `outputs.<task_id>` refers to the task in the same iteration — never index outputs by value.
+
 ### Schedule trigger
 
 Map Airflow `schedule` to a Kestra `Schedule` trigger:
@@ -245,14 +281,17 @@ triggers:
 | `default_args.owner` | `# comment` or label |
 | `tags` | `labels` |
 | `description` | `description` |
-| `catchup=False` | No equivalent needed |
-| `retries` | Not set at flow level; handle per-task if needed |
+| `catchup=False` | `recoverMissedSchedules: NONE` on the Schedule trigger |
+| `catchup=True` | `recoverMissedSchedules: ALL` |
+| `max_active_runs` | flow-level `concurrency: {limit: N}` |
+| `default_args.retries` | task-level `retry` on each task (see construct mapping) |
 
 ### Schema compliance
 
 - Use only task types and properties explicitly defined in the fetched schema
 - Never invent property names
 - Property keys must be unique within each task block
+- Read JSON outputs in Pebble with `fromJson()`, never `json()`
 
 ### Secrets and credentials
 
