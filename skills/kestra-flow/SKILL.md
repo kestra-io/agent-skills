@@ -1,7 +1,7 @@
 ---
 name: kestra-flow
 description: Generate, modify, or debug Kestra Flow YAML by fetching the live flow schema and applying the same guardrails used by the Kestra AI Copilot. Use when users ask to create, write, update, or fix a Kestra flow.
-compatibility: Requires curl and network access to https://api.kestra.io/v1/plugins/schemas/flow. No Kestra instance required.
+compatibility: Requires curl and network access to https://api.kestra.io/v1/plugins/schemas/flow, or to a Kestra instance's own schema. No Kestra instance required.
 ---
 
 # Kestra Flow Skill
@@ -25,7 +25,9 @@ Use this skill when the request includes:
 
 ### Step 1 — Fetch the flow schema
 
-Fetch the full schema with `curl` and read it directly — do not pipe it through any interpreter:
+If the user has a Kestra instance, prefer its own schema (`GET <host>/api/v1/plugins/schemas/flow`, tenant-less path). It matches the Kestra version and the plugins actually installed. The public schema tracks 1.x and accepts constructs removed in 2.0.
+
+Otherwise fetch the public schema with `curl` and read it directly — do not pipe it through any interpreter:
 
 ```bash
 curl -s https://api.kestra.io/v1/plugins/schemas/flow
@@ -63,7 +65,10 @@ Apply all generation rules below, then output raw YAML only.
 
 **Looping**
 - Use `Loop` for repeated actions over a collection, with the element as `{{ item.value }}`. Never use `ForEach`, `ForEachItem`, `EachSequential` or `EachParallel`: they were removed in Kestra 2.0 and fail to parse.
-- Use `LoopUntil` for condition-based looping.
+- Use `Loop` for condition-based looping too. Check the schema for the exact properties.
+
+**Removed in Kestra 2.0**
+- Never generate `pluginDefaults` (flow, namespace, tenant or server level). It was removed in 2.0 and the flow fails to parse. Set values on each task, or hoist shared values into flow `variables:`. On Enterprise, a Policy can enforce shared values.
 
 **Flow outputs**
 - Only include flow-level `outputs` if the user explicitly requests returning a value from the execution.
