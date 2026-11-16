@@ -1,114 +1,122 @@
 # Kestra Agent Skills
 
-A curated collection of agent skills for operating Kestra environments.
+[![skills.sh](https://skills.sh/b/kestra-io/agent-skills)](https://skills.sh/kestra-io/agent-skills)
 
+Agent skills that teach your AI coding assistant to write, harden, operate, and migrate [Kestra](https://kestra.io) flows.
 
-## Available skills
+Every skill is a folder with a `SKILL.md` file in the open [Agent Skills](https://agentskills.io) format, so the same skills work in Claude, Codex, Gemini CLI, Cursor, GitHub Copilot, OpenCode, and any other tool that reads that format.
 
-### kestra-flow
+| Skill | What it does |
+|---|---|
+| [`kestra-flow`](skills/kestra-flow/SKILL.md) | Generate, modify, or debug flow YAML against the live flow schema |
+| [`kestra-flow-hardening`](skills/kestra-flow-hardening/SKILL.md) | Audit flows and add retries, timeouts, concurrency, SLAs, idempotency guards |
+| [`kestra-ops`](skills/kestra-ops/SKILL.md) | Deploy flows, run executions, manage namespaces and files with `kestractl` |
+| [`migrate-kestra-2`](skills/migrate-kestra-2/SKILL.md) | Upgrade an instance and its flows from Kestra 1.3 to 2.0 |
+| [`migrate-airflow-kestra`](skills/migrate-airflow-kestra/SKILL.md) | Convert an Airflow DAG into a Kestra flow |
 
-Generate, modify, or debug Kestra Flow YAML grounded in the live flow schema — the same way the Kestra AI Copilot does.
+## Install
 
-**Use when:**
-- Generating a new Kestra flow from a description
-- Modifying or extending an existing flow
-- Debugging invalid YAML or incorrect task/trigger references
+### Any AI coding tool (recommended)
 
-**Covers:**
-- Fetching the live flow schema from `https://api.kestra.io/v1/plugins/schemas/flow`
-- Schema-validated task and trigger generation
-- Partial modification (touch only the relevant part)
-- Guardrails: no invented types, no hardcoded secrets, correct looping and trigger patterns
+The [`skills`](https://skills.sh) CLI detects the AI tools on your machine (Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, OpenCode, Windsurf, Cline, and 40+ others) and installs the skills in the folder each one reads:
 
-Skill path: `skills/kestra-flow/SKILL.md`
+```bash
+npx skills add kestra-io/agent-skills
+```
 
----
+Useful options:
 
-### kestra-flow-hardening
+```bash
+# Install every skill without the picker
+npx skills add kestra-io/agent-skills --skill '*'
 
-Audit existing Kestra flows and add production-hardening controls — the consulting counterpart to `kestra-flow`.
+# Install only some skills
+npx skills add kestra-io/agent-skills --skill kestra-flow --skill kestra-ops
 
-**Use when:**
-- Hardening one or more flows for production
-- Auditing flows for resilience, idempotency, and guardrail gaps
-- Adding retries, timeouts, error handling, concurrency limits, SLAs, or idempotency guards
+# Install for your user account (all projects) instead of the current project
+npx skills add kestra-io/agent-skills -g
 
-**Covers:**
-- Severity-ranked audit report (Critical / High / Medium / Low) with risk, caveat, and proposed fix per finding
-- Idempotency judgment — never recommends a blind retry on a non-idempotent write; flags the dedup-guard vs. retry-if-safe branches
-- Proportional auditing calibrated by flow signals (triggers, side-effects, namespace env); "already sound" is a valid result
-- Surgical, schema-validated edits applied on confirmation, inline and structure-preserving
-- Version- and edition-aware (OSS / EE), with EE-only patterns labeled and given an OSS fallback
+# Install for specific tools only
+npx skills add kestra-io/agent-skills -a claude-code -a codex -a cursor
 
-Skill path: `skills/kestra-flow-hardening/SKILL.md`
+# List the skills without installing
+npx skills add kestra-io/agent-skills --list
+```
 
----
+### Claude Code
 
-### kestra-ops
+Install as a plugin so Claude Code keeps the skills up to date:
 
-Operate Kestra using `kestractl` for flow, execution, namespace, and namespace-file operations.
+```text
+/plugin marketplace add kestra-io/agent-skills
+/plugin install kestra@kestra-agent-skills
+```
 
-**Use when:**
-- Validating or deploying flows
-- Triggering executions and checking status
-- Managing namespaces and `nsfiles`
-- Configuring or switching CLI contexts
+Run `/skills` to check they are listed.
 
-**Covers:**
-- Context and auth setup (`config add`, `config use`, `config show`)
-- Read and inspection flows (`flows list/get`, `executions get`, `namespaces list`)
-- Safe write operations (`flows deploy`, `nsfiles upload/delete`)
-- Operational guardrails for production and automation output
+### OpenAI Codex
 
-Skill path: `skills/kestra-ops/SKILL.md`
+```bash
+codex plugin marketplace add kestra-io/agent-skills
+codex plugin add kestra@kestra-agent-skills
+```
 
----
+Start a new Codex session after installing.
 
-### migrate-kestra-2
+### Cursor
 
-Guide a full **Kestra 1.3 → 2.0** migration: pre-flight audit, server upgrade, CLI-first flow migration, and guided rewrites of the patterns the CLI can't automate.
+```text
+/add-plugin kestra-io/agent-skills
+```
 
-**Use when:**
-- Upgrading or migrating an instance to Kestra 2.0
-- Checking whether an instance is ready for 2.0 (readiness report + complexity rating)
-- Triaging `kestra-migrate` warnings or flows failing to parse after a 2.0 upgrade
+### Claude.ai and Claude Desktop
 
-**Covers:**
-- Detect-first audit (probes CLIs, contexts, instance, runs `kestra-migrate --check`) with a shareable readiness report and Low/Medium/High/Critical complexity tier
-- Advisory one-way-door guardrails: verified backup before upgrade (2.0 drops JDBC queue tables irreversibly), accepted risks recorded, never blocked
-- CLI-first flow migration with a persistent `migration-ledger.md` — every flow driven to a terminal state (validated/deployed or deferred-with-reason)
-- Guided per-pattern rewrites with diff + confirmation: `ForEach`/`ForEachItem` → `Loop`, trigger `conditions` → `when`/`dependsOn`, `pluginDefaults` → Policies/inline, removed types
-- Server upgrade sequences for Docker Compose and Kubernetes/Helm, EE/OSS branches, `kestra migrate plan/run` handling
-- Composes with `kestra-ops` and `kestra-flow` when installed (discovered by skill name — install via `npx skills add kestra-io/agent-skills@<name>`); standalone kestractl fallback inlined
+1. Zip each skill folder (the zip must contain the folder, with `SKILL.md` inside):
+   ```bash
+   git clone https://github.com/kestra-io/agent-skills.git && cd agent-skills/skills
+   for s in */; do zip -r "${s%/}.zip" "$s"; done
+   ```
+2. In Claude, open **Settings → Capabilities → Skills**, click **Upload skill**, and upload each zip.
+3. Turn the skills on.
 
----
+### Manual install
 
-### migrate-airflow-kestra
+Each skill is a self-contained folder. Copy the ones you want from `skills/` into the skills folder your tool reads, for example `.agents/skills/` (Codex, Cursor, Gemini CLI, GitHub Copilot, OpenCode) or `.claude/skills/` (Claude Code):
 
-Migrate an **Apache Airflow** DAG to a production-ready **Kestra** flow.
+```bash
+git clone https://github.com/kestra-io/agent-skills.git /tmp/kestra-skills
+mkdir -p .agents/skills
+cp -R /tmp/kestra-skills/skills/* .agents/skills/
+```
 
-**Use when:**
-- Converting an Airflow DAG (`.py`) to a Kestra flow YAML
-- Translating `@task`-decorated functions or operators into Kestra tasks
-- Preserving Airflow parallel execution (fan-out/fan-in) in Kestra
+Check your tool's documentation for its user-wide skills folder. For a tool without skills support, attach or paste `skills/<name>/SKILL.md` into the chat.
 
-**Covers:**
-- Reading and analysing the Airflow DAG structure, tasks, and dependencies
-- Fetching the live Kestra schema from `https://api.kestra.io/v1/plugins/schemas/flow`
-- Extracting Python business logic into namespace files
-- Generating schema-validated Kestra flow YAML with correct task ordering and parallelism
-- Mapping Airflow XCom data passing to Kestra `outputFiles`/`inputFiles`
+### Update
 
-Skill path: `skills/migrate-airflow-kestra/SKILL.md`
+| Installed with | Update with |
+|---|---|
+| `npx skills` | `npx skills update` (add `-g` for user-wide installs) |
+| Claude Code plugin | `/plugin marketplace update kestra-agent-skills` |
+| Manual copy | `git pull` in your clone, then copy the folders again |
+
+## Requirements
+
+| Skill | Needs |
+|---|---|
+| `kestra-flow`, `kestra-flow-hardening`, `migrate-airflow-kestra` | `curl` and access to `https://api.kestra.io`. No Kestra instance needed. |
+| `kestra-ops` | [`kestractl`](https://kestra.io/docs), network access to your Kestra API, a tenant and token |
+| `migrate-kestra-2` | Access to your instance; uses `kestra-migrate` and `kestractl` when available |
 
 ## Usage
 
-Load the skill and provide a concrete operational objective.
-
-Examples:
+Skills load automatically when your request matches them. You can also name the skill:
 
 ```text
 Use kestra-flow to write a flow that polls a REST API every 30 minutes and stores the result in KV store.
+```
+
+```text
+Use kestra-flow-hardening to audit the flows in ./flows before we go to production.
 ```
 
 ```text
@@ -116,43 +124,71 @@ Use kestra-ops to validate and deploy all flows in ./flows to prod.namespace wit
 ```
 
 ```text
-Use kestra-ops to run my-flow in my.namespace, wait for completion, and summarize the result.
+Is my instance ready for Kestra 2.0?
 ```
 
 ```text
 Use migrate-airflow-kestra to migrate dags/ingest_pipeline.py from Airflow to Kestra, output to kestra/.
 ```
 
-## Structure
+## Skills in detail
 
-```
-.
-├── README.md
-└── skills/
-    ├── kestra-flow/
-    │   └── SKILL.md
-    ├── kestra-flow-hardening/
-    │   ├── SKILL.md
-    │   └── references/
-    │       └── hardening-patterns.md
-    ├── kestra-ops/
-    │   └── SKILL.md
-    ├── migrate-airflow-kestra/
-    │   └── SKILL.md
-    └── migrate-kestra-2/
-        ├── SKILL.md
-        └── references/
-            ├── audit.md
-            ├── cli-reference.md
-            ├── foreach-to-loop.md
-            ├── plugin-defaults.md
-            ├── removed-constructs.md
-            ├── server-upgrade.md
-            └── trigger-conditions.md
-```
+### kestra-flow
+
+Generate, modify, or debug Kestra Flow YAML grounded in the live flow schema — the same way the Kestra AI Copilot does.
+
+- Fetches the live schema from `https://api.kestra.io/v1/plugins/schemas/flow`
+- Schema-validated task and trigger generation
+- Partial modification (touches only the relevant part)
+- Guardrails: no invented types, no hardcoded secrets, correct looping and trigger patterns
+
+### kestra-flow-hardening
+
+Audit existing flows and add production-hardening controls — the consulting counterpart to `kestra-flow`.
+
+- Severity-ranked report (Critical / High / Medium / Low) with risk, caveat, and fix per finding
+- Never recommends a blind retry on a non-idempotent write
+- Proportional to the flow; "already sound" is a valid result
+- Surgical, schema-validated edits applied on confirmation
+- Edition-aware (OSS / EE), with OSS fallbacks for EE-only patterns
+
+### kestra-ops
+
+Operate Kestra with `kestractl`.
+
+- Context and auth setup (`config add`, `config use`, `config show`)
+- Inspection (`flows list/get`, `executions get`, `namespaces list`)
+- Safe writes (`flows deploy`, `nsfiles upload/delete`)
+- Guardrails for production and automation output
+
+### migrate-kestra-2
+
+Guide a full Kestra 1.3 → 2.0 migration.
+
+- Pre-flight audit with a readiness report and complexity rating
+- Verified-backup guardrail before the irreversible upgrade
+- CLI-first flow migration tracked in a `migration-ledger.md`
+- Guided rewrites: `ForEach`/`ForEachItem` → `Loop`, trigger `conditions` → `when`/`dependsOn`, `pluginDefaults` → Policies, removed types
+- Server upgrade steps for Docker Compose and Kubernetes/Helm
+- Uses `kestra-ops` and `kestra-flow` when they are installed too
+
+### migrate-airflow-kestra
+
+Migrate an Apache Airflow DAG to a production-ready Kestra flow.
+
+- Maps DAG tasks and dependencies to Kestra tasks, keeping fan-out/fan-in parallelism
+- Extracts Python business logic into namespace files
+- Maps XCom to `outputFiles`/`inputFiles`
+- Validates against the live schema
 
 ## Contributing
 
-- Add each skill as `skills/<skill-name>/SKILL.md`.
+- Add each skill as `skills/<skill-name>/SKILL.md`, with `name` and `description` frontmatter. The folder name must match `name`.
+- Put long reference material in `skills/<skill-name>/references/` and link it from `SKILL.md`.
 - Include purpose, trigger conditions, required inputs, workflow, guardrails, and example prompts.
 - Keep commands copy-pasteable and production-safe.
+- Add the new skill to the table at the top of this README.
+
+## License
+
+[Apache 2.0](LICENSE)

@@ -1,0 +1,25 @@
+{
+  "name": "kestra-agent-skills",
+  "owner": {
+    "name": "Kestra",
+    "url": "https://kestra.io"
+  },
+  "metadata": {
+    "description": "Agent skills to write, harden, operate, and migrate Kestra flows."
+  },
+  "plugins": [
+    {
+      "name": "kestra",
+      "description": "Kestra skills: kestra-flow, kestra-flow-hardening, kestra-ops, migrate-kestra-2, migrate-airflow-kestra.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/kestra-flow",
+        "./skills/kestra-flow-hardening",
+        "./skills/kestra-ops",
+        "./skills/migrate-kestra-2",
+        "./skills/migrate-airflow-kestra"
+      ]
+    }
+  ]
+}
