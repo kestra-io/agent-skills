@@ -61,7 +61,17 @@ codex plugin marketplace add kestra-io/agent-skills
 codex plugin add kestra@kestra-agent-skills
 ```
 
-Start a new Codex session after installing.
+Start a new Codex session after installing. The plugin also connects the public Kestra MCP server (`https://api.kestra.io/v1/mcp`, no auth), so Codex can look up plugins, task schemas, docs and blueprints without downloading the full schema.
+
+### ChatGPT
+
+The repo root is also an [Agent Plugins](https://agent-plugins.org) package: `plugin.json` is the manifest (with the ChatGPT listing metadata), `skills/` is picked up as is, and `mcp.json` connects the public Kestra MCP server. Kestra is not listed in the ChatGPT plugin directory yet. To try it in ChatGPT desktop, clone the repo, add it as a repo marketplace, restart the app and install **Kestra** from the Plugins directory. Workspace admins can then publish it to the workspace from **Plugins > Personal**.
+
+| Skill | ChatGPT |
+|---|---|
+| `kestra-flow`, `kestra-flow-hardening`, `migrate-airflow-kestra` | Yes, through the MCP server |
+| `migrate-kestra-2` | Guidance only (no shell) |
+| `kestra-ops` | No, needs `kestractl` and a shell |
 
 ### Cursor
 
@@ -103,7 +113,7 @@ Check your tool's documentation for its user-wide skills folder. For a tool with
 
 | Skill | Needs |
 |---|---|
-| `kestra-flow`, `kestra-flow-hardening`, `migrate-airflow-kestra` | `curl` and access to `https://api.kestra.io`. No Kestra instance needed. |
+| `kestra-flow`, `kestra-flow-hardening`, `migrate-airflow-kestra` | The Kestra MCP server (`https://api.kestra.io/v1/mcp`, bundled with the plugin), or `curl` + `jq` with access to `https://api.kestra.io`. No Kestra instance needed. |
 | `kestra-ops` | [`kestractl`](https://kestra.io/docs), network access to your Kestra API, a tenant and token |
 | `migrate-kestra-2` | Access to your instance; uses `kestra-migrate` and `kestractl` when available |
 
