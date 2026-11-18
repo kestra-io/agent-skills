@@ -83,8 +83,6 @@ The repo root is also an [Agent Plugins](https://agent-plugins.org) package: `pl
 
 Cursor loads every skill under `skills/` from `.cursor-plugin/plugin.json`. Check them in **Settings → Rules, Skills, Subagents**.
 
-Cursor loads every skill under `skills/` from `.cursor-plugin/plugin.json`. Check them in **Settings → Rules, Skills, Subagents**.
-
 ### Claude.ai and Claude Desktop
 
 1. Zip each skill folder (the zip must contain the folder, with `SKILL.md` inside):
