@@ -1,0 +1,16 @@
+{
+  "name": "kestra-agent-skills",
+  "owner": {
+    "name": "Kestra"
+  },
+  "metadata": {
+    "description": "Agent skills to write, harden, operate, and migrate Kestra flows."
+  },
+  "plugins": [
+    {
+      "name": "kestra",
+      "source": "./",
+      "description": "Kestra skills: kestra-flow, kestra-flow-hardening, kestra-ops, migrate-kestra-2, migrate-airflow-kestra."
+    }
+  ]
+}
