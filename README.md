@@ -52,7 +52,9 @@ Install as a plugin so Claude Code keeps the skills up to date:
 /plugin install kestra@kestra-agent-skills
 ```
 
-Run `/skills` to check they are listed.
+Skills are namespaced as `kestra:<skill>` (for example `kestra:kestra-flow`). Run `/skills` to check they are listed.
+
+The plugin has no `version`, so every new commit on `main` is picked up as an update.
 
 ### OpenAI Codex
 
