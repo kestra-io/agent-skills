@@ -52,7 +52,9 @@ Install as a plugin so Claude Code keeps the skills up to date:
 /plugin install kestra@kestra-agent-skills
 ```
 
-Run `/skills` to check they are listed.
+Skills are namespaced as `kestra:<skill>` (for example `kestra:kestra-flow`). Run `/skills` to check they are listed.
+
+The plugin has no `version`, so every new commit on `main` is picked up as an update.
 
 ### OpenAI Codex
 
@@ -63,11 +65,23 @@ codex plugin add kestra@kestra-agent-skills
 
 Start a new Codex session after installing.
 
+### ChatGPT
+
+The repo root is also an [Agent Plugins](https://agent-plugins.org) package: `plugin.json` is the manifest (with the ChatGPT listing metadata), and `skills/` is picked up as is. Kestra is not listed in the ChatGPT plugin directory yet. To try it in ChatGPT desktop, clone the repo, add it as a repo marketplace, restart the app and install **Kestra** from the Plugins directory. Workspace admins can then publish it to the workspace from **Plugins > Personal**.
+
+| Skill | ChatGPT |
+|---|---|
+| `kestra-flow`, `kestra-flow-hardening`, `migrate-airflow-kestra` | Yes, needs web access |
+| `migrate-kestra-2` | Guidance only (no shell) |
+| `kestra-ops` | No, needs `kestractl` and a shell |
+
 ### Cursor
 
 ```text
 /add-plugin kestra-io/agent-skills
 ```
+
+Cursor loads every skill under `skills/` from `.cursor-plugin/plugin.json`. Check them in **Settings → Rules, Skills, Subagents**.
 
 ### Claude.ai and Claude Desktop
 
