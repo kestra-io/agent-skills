@@ -27,13 +27,7 @@ Use this skill when the request includes:
 
 If the user has a Kestra instance, prefer its own schema (`GET <host>/api/v1/plugins/schemas/flow`, tenant-less path). It matches the Kestra version and the plugins actually installed. The MCP server tracks 1.x and accepts constructs removed in 2.0.
 
-Otherwise use the Kestra docs MCP server (`kestra-docs`, https://api.kestra.io/v1/mcp). Never download the full flow schema, it is about 16 MB. Fetch only what the flow needs:
-
-1. `list_plugins` / `plugin_tasks` to find the task or trigger types for the request.
-2. `task_schema` for each type you will use, to get exact property names and types.
-3. `validate_flow` on the final YAML when available.
-
-Do not generate any task before its schema was fetched.
+Otherwise use the Kestra docs MCP server (`kestra-docs`, declared in `mcp.json`). Never download the full flow schema, it is about 16 MB. Use the server's tools to find the task and trigger types the request needs, then fetch the schema of each type you will use. Do not generate any task before its schema was fetched.
 
 ### Step 2 — Collect context
 
