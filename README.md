@@ -117,7 +117,8 @@ Check your tool's documentation for its user-wide skills folder. For a tool with
 
 | Skill | Needs |
 |---|---|
-| `kestra-flow`, `kestra-flow-hardening`, `migrate-airflow-kestra` | `curl` and access to `https://api.kestra.io`. No Kestra instance needed. |
+| `kestra-flow` | The Kestra docs MCP server (`https://api.kestra.io/v1/mcp`, declared in `mcp.json` and `.mcp.json`). Skills-only installs (`npx skills add`, Claude.ai zip, manual copy) do not get it: add that server to your tool yourself. No Kestra instance needed. |
+| `kestra-flow-hardening`, `migrate-airflow-kestra` | `curl` and access to `https://api.kestra.io`. No Kestra instance needed. |
 | `kestra-ops` | [`kestractl`](https://kestra.io/docs), network access to your Kestra API, a tenant and token |
 | `migrate-kestra-2` | Access to your instance; uses `kestra-migrate` and `kestractl` when available |
 
@@ -151,7 +152,7 @@ Use migrate-airflow-kestra to migrate dags/ingest_pipeline.py from Airflow to Ke
 
 Generate, modify, or debug Kestra Flow YAML grounded in the live flow schema — the same way the Kestra AI Copilot does.
 
-- Fetches the live schema from `https://api.kestra.io/v1/plugins/schemas/flow`
+- Fetches task schemas on demand from the Kestra docs MCP server (`https://api.kestra.io/v1/mcp`)
 - Schema-validated task and trigger generation
 - Partial modification (touches only the relevant part)
 - Guardrails: no invented types, no hardcoded secrets, correct looping and trigger patterns

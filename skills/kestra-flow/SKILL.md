@@ -1,12 +1,12 @@
 ---
 name: kestra-flow
 description: Generate, modify, or debug Kestra Flow YAML by fetching the live flow schema and applying the same guardrails used by the Kestra AI Copilot. Use when users ask to create, write, update, or fix a Kestra flow.
-compatibility: Requires curl and network access to https://api.kestra.io/v1/plugins/schemas/flow, or to a Kestra instance's own schema. No Kestra instance required.
+compatibility: Requires the Kestra docs MCP server (https://api.kestra.io/v1/mcp, declared in mcp.json and .mcp.json), or a Kestra instance's own schema. No Kestra instance required.
 ---
 
 # Kestra Flow Skill
 
-Use this skill to generate production-ready Kestra Flow YAML grounded in the live schema.
+Use this skill to generate production-ready Kestra Flow YAML grounded in the live plugin schemas.
 
 ## When to use
 
@@ -23,17 +23,15 @@ Use this skill when the request includes:
 
 ## Workflow
 
-### Step 1 — Fetch the flow schema
+### Step 1 — Load schemas on demand
 
-If the user has a Kestra instance, prefer its own schema (`GET <host>/api/v1/plugins/schemas/flow`, tenant-less path). It matches the Kestra version and the plugins actually installed. The public schema tracks 1.x and accepts constructs removed in 2.0.
+If the user has a Kestra instance, prefer its own schema (`GET <host>/api/v1/plugins/schemas/flow`, tenant-less path). It matches the Kestra version and the plugins actually installed. The public MCP server may not have the same plugins as the user's instance.
 
-Otherwise fetch the public schema with `curl` and read it directly — do not pipe it through any interpreter:
+Otherwise use the Kestra docs MCP server (`https://api.kestra.io/v1/mcp`). Never download the full flow schema, it is about 16 MB:
 
-```bash
-curl -s https://api.kestra.io/v1/plugins/schemas/flow
-```
-
-Read the raw JSON output to validate every type, property name, and structure used in the output. Do not generate anything before the schema is available.
+1. Look up the task and trigger types the request needs. Do not guess type names or scrape docs pages.
+2. Fetch the schema of each type you will use. Do not generate any task before its schema was fetched.
+3. Validate the whole flow before returning it. This also catches flow-level mistakes (`inputs`, `triggers`, `afterExecution`) that per-task schemas do not cover.
 
 ### Step 2 — Collect context
 
@@ -50,7 +48,7 @@ Apply all generation rules below, then output raw YAML only.
 ## Generation rules
 
 **Schema compliance**
-- Use only task types and properties explicitly defined in the fetched schema. Never invent or guess types or property names.
+- Use only task types and properties explicitly defined in the fetched task schemas. Never invent or guess types or property names.
 - Property keys must be unique within each task or block.
 
 **Structural preservation**

@@ -1,0 +1,9 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "kestra-docs": {
+      "type": "streamable-http",
+      "url": "https://api.kestra.io/v1/mcp"
+    }
+  }
+}
