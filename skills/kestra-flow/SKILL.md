@@ -27,11 +27,11 @@ Use this skill when the request includes:
 
 If the user has a Kestra instance, prefer its own schema (`GET <host>/api/v1/plugins/schemas/flow`, tenant-less path). It matches the Kestra version and the plugins actually installed. The public MCP server may not have the same plugins as the user's instance.
 
-Otherwise use the `kestra-docs` MCP tools (server `https://api.kestra.io/v1/mcp`). Never download the full flow schema this way, it is about 16 MB:
+Otherwise use the Kestra docs MCP server (`https://api.kestra.io/v1/mcp`). Never download the full flow schema this way, it is about 16 MB:
 
-1. `list_plugins` and `plugin_tasks` to find the task and trigger types the request needs. Do not guess type names or scrape docs pages.
-2. `task_schema` for each type you will use. Do not generate any task before its schema was fetched.
-3. `validate_flow` on the whole flow before returning it. It also catches flow-level mistakes (`inputs`, `triggers`, `afterExecution`) that per-task schemas do not cover.
+1. Look up the task and trigger types the request needs. Do not guess type names or scrape docs pages.
+2. Fetch the schema of each type you will use. Do not generate any task before its schema was fetched.
+3. Validate the whole flow before returning it. This also catches flow-level mistakes (`inputs`, `triggers`, `afterExecution`) that per-task schemas do not cover.
 
 If the MCP tools are not available (for example skills-only installs), fall back to the public schema with `curl` and read it directly, do not pipe it through any interpreter. Read the raw JSON to validate every type, property name, and structure used in the output. Do not generate anything before the schema is available.
 
