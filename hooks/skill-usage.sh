@@ -16,7 +16,8 @@ host="${KESTRA_SKILLS_POSTHOG_HOST:-https://kestra.io/t}"
 
 # Only our skills: the hook also fires for skills of other plugins.
 skill=$(jq -r '.tool_input.skill // empty' 2>/dev/null)
-skill="${skill#kestra:}"
+# Plugin skills always arrive as kestra:<name>; an unprefixed name is a standalone install or a user skill.
+case "$skill" in kestra:*) skill="${skill#kestra:}" ;; *) exit 0 ;; esac
 case "$skill" in ""|*/*|*..*) exit 0 ;; esac
 [ -d "$root/skills/$skill" ] || exit 0
 

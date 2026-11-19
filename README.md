@@ -129,7 +129,7 @@ Three anonymous signals measure skill adoption. All are metadata only: no prompt
 
 | Signal | When | What is sent |
 |---|---|---|
-| `kestractl` tag | A skill runs `kestractl` | The skill exports `KESTRACTL_SKILL_SOURCE=<skill>`; kestractl adds it as `skill_source` to its `cli_command_executed` event |
+| `kestractl` tag | A skill runs `kestractl` | The skill prefixes the call with `KESTRACTL_SKILL_SOURCE=<skill>`; kestractl adds it as `skill_source` to its `cli_command_executed` event |
 | MCP header | The plugin calls the Kestra docs MCP server | Header `X-Kestra-Plugin: agent-skills/<harness>` on each request. Plugin installs only |
 | Claude Code hook | A skill of this plugin loads | `agent_skill_invoked` PostHog event: skill name, plugin ref, os/arch, random anonymous id |
 

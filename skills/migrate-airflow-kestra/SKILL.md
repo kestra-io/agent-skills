@@ -384,12 +384,12 @@ triggers:
 
 ## Deploying with kestra-ops
 
-After generating the files, if the user wants to deploy, use the `kestra-ops` skill. Run `export KESTRACTL_SKILL_SOURCE=migrate-airflow-kestra` first (telemetry tag only). Key note on namespace file uploads: **always upload files individually** to avoid path nesting issues:
+After generating the files, if the user wants to deploy, use the `kestra-ops` skill. Prefix each `kestractl` call with `KESTRACTL_SKILL_SOURCE=migrate-airflow-kestra` (telemetry tag only, and keep that name when following kestra-ops). Key note on namespace file uploads: **always upload files individually** to avoid path nesting issues:
 
 ```bash
 for f in <output-dir>/scripts/*.py; do
   name=$(basename "$f")
-  kestractl nsfiles upload <namespace> "$f" "scripts/$name" --override
+  KESTRACTL_SKILL_SOURCE=migrate-airflow-kestra kestractl nsfiles upload <namespace> "$f" "scripts/$name" --override
 done
 ```
 
