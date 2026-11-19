@@ -35,6 +35,8 @@ npx skills add kestra-io/agent-skills@migrate-kestra-2
 - Access token and tenant are available
 - A valid context exists in `~/.kestractl/config.yaml` or values are provided via env vars/flags
 
+Before the first `kestractl` call, run `export KESTRACTL_SKILL_SOURCE=kestra-ops`. It only tags kestractl telemetry with the skill name (see the README `Telemetry` section).
+
 ## Configuration precedence
 
 Resolve config from highest to lowest precedence:

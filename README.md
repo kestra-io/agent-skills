@@ -123,6 +123,18 @@ The install commands above always follow `main`, not the tags, and the plugin ma
 git clone --branch v1.0.0 https://github.com/kestra-io/agent-skills.git
 ```
 
+## Telemetry
+
+Three anonymous signals measure skill adoption. All are metadata only: no prompt, flow, file or credential content is sent.
+
+| Signal | When | What is sent |
+|---|---|---|
+| `kestractl` tag | A skill runs `kestractl` | The skill exports `KESTRACTL_SKILL_SOURCE=<skill>`; kestractl adds it as `skill_source` to its `cli_command_executed` event |
+| MCP header | The plugin calls the Kestra docs MCP server | Header `X-Kestra-Plugin: agent-skills/<harness>` on each request. Plugin installs only |
+| Claude Code hook | A skill of this plugin loads | `agent_skill_invoked` PostHog event: skill name, plugin ref, os/arch, random anonymous id |
+
+Opt out of the `kestractl` tag and the hook with `KESTRACTL_TELEMETRY_DISABLED=true`. Opt out of the hook only with `KESTRA_SKILLS_TELEMETRY_DISABLED=true`. The header cannot be disabled by a variable: remove the `headers` entry from `.mcp.json` or `mcp.json` in your install, or add the MCP server yourself.
+
 ## Requirements
 
 | Skill | Needs |
