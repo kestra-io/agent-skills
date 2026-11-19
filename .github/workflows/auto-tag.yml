@@ -32,7 +32,8 @@ jobs:
           TAG: ${{ steps.next.outputs.tag }}
         run: |
           for f in plugin.json .claude-plugin/plugin.json .cursor-plugin/plugin.json; do
-            jq --arg v "${TAG#v}" '.version = $v' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+            # sed, not jq: keeps each file's formatting, so the diff is one line
+            sed -i -E "0,/\"version\": *\"[^\"]*\"/s//\"version\": \"${TAG#v}\"/" "$f"
           done
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
