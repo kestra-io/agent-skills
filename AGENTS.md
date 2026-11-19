@@ -12,3 +12,17 @@ Rules for AI agents working in this repository.
 - The agent that opens a PR for a new issue must run a QA before asking for review, and post the report as a PR comment.
 - Test the PR on every compatible harness (Claude Code, Cursor, Codex, and any other tool the repo supports), each from a real install of the branch, not only from a local `--plugin-dir` or `--mcp-config` shortcut.
 - The report lists, per harness: version, install result, skill loading, and a runtime check. State what was not tested. Report failures as they are.
+
+## Releasing
+
+One SemVer for the whole repo, tagged `vX.Y.Z`. The tag must match the `version` in `plugin.json`, `.claude-plugin/plugin.json` and `.cursor-plugin/plugin.json`.
+
+- patch: wording or doc fix, small skill correction.
+- minor: new skill, or new behavior in an existing skill.
+- major: skill renamed or removed, or install layout changed.
+
+Steps:
+
+1. Set the same new version in the three manifests and merge it to `main`.
+2. Run `scripts/check-versions.sh` locally.
+3. Tag and push: `git tag vX.Y.Z && git push origin vX.Y.Z`. The release workflow checks the versions and publishes a GitHub release with generated notes.

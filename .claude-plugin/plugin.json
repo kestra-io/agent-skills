@@ -1,5 +1,6 @@
 {
   "name": "kestra",
+  "version": "1.0.0",
   "description": "Agent skills to write, harden, operate, and migrate Kestra flows.",
   "author": {
     "name": "Kestra",
