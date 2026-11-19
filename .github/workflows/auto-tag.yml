@@ -2,7 +2,8 @@ name: Auto Tag
 
 # On every push to main: compute the next semver from the conventional commits since
 # the last tag, write it into the three manifests, commit, tag that commit and release.
-# Bump rules live in scripts/next-version.sh. Needs a baseline v* tag (v1.0.0).
+# Bump rules live in scripts/next-version.sh. With no v* tag yet, the manifest version
+# is tagged and released as the baseline, without a bump.
 on:
   push:
     branches: [main]
@@ -19,12 +20,22 @@ jobs:
   tag:
     runs-on: ubuntu-latest
     outputs:
-      tag: ${{ steps.next.outputs.tag }}
+      tag: ${{ steps.base.outputs.tag || steps.next.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - id: base
+        run: |
+          git describe --tags --abbrev=0 --match 'v*' >/dev/null 2>&1 && exit 0
+          tag="v$(jq -r .version plugin.json)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$tag" -m "Release $tag"
+          git push origin "refs/tags/$tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
       - id: next
+        if: steps.base.outputs.tag == ''
         run: scripts/next-version.sh
       - name: Bump manifests, commit and tag
         if: steps.next.outputs.tag != ''
