@@ -1,0 +1,50 @@
+name: Auto Tag
+
+# On every push to main: compute the next semver from the conventional commits since
+# the last tag, write it into the three manifests, commit, tag that commit and release.
+# Bump rules live in scripts/next-version.sh. Needs a baseline v* tag (v1.0.0).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: auto-tag-main
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.next.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: next
+        run: scripts/next-version.sh
+      - name: Bump manifests, commit and tag
+        if: steps.next.outputs.tag != ''
+        env:
+          TAG: ${{ steps.next.outputs.tag }}
+        run: |
+          for f in plugin.json .claude-plugin/plugin.json .cursor-plugin/plugin.json; do
+            jq --arg v "${TAG#v}" '.version = $v' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+          done
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "chore: release $TAG"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push --atomic origin "$GITHUB_REF_NAME" "refs/tags/$TAG"
+
+  release:
+    needs: tag
+    if: needs.tag.outputs.tag != ''
+    # a tag pushed with GITHUB_TOKEN does not trigger release.yml, so call it directly
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ needs.tag.outputs.tag }}
+    secrets: inherit

@@ -21,8 +21,13 @@ One SemVer for the whole repo, tagged `vX.Y.Z`. The tag must match the `version`
 - minor: new skill, or new behavior in an existing skill.
 - major: skill renamed or removed, or install layout changed.
 
-Steps:
+Releases are automatic. On every push to `main`, `.github/workflows/auto-tag.yml` computes the next version from the conventional commit subjects since the last tag (`scripts/next-version.sh`, highest bump wins), commits the new version into the three manifests, tags that commit and publishes a GitHub release. Slack is notified of the release or its failure.
 
-1. Set the same new version in the three manifests and merge it to `main`.
-2. Run `scripts/check-versions.sh` locally.
-3. Tag and push: `git tag vX.Y.Z && git push origin vX.Y.Z`. The release workflow checks the versions and publishes a GitHub release with generated notes.
+| commit | bump |
+| --- | --- |
+| `<type>!:` or `BREAKING CHANGE:` footer | major |
+| `feat:` | minor |
+| `fix:` `perf:` `build:` `refactor:` `chore(deps):` | patch |
+| `docs:` `test:` `ci:` `style:` bare `chore:` | none |
+
+Put `[skip release]` in the head commit subject to skip a release. Do not edit the manifest versions by hand. Pushing a `v*` tag by hand still runs the release workflow.
