@@ -1,0 +1,60 @@
+name: Auto Tag
+
+# On every push to main: compute the next semver from the conventional commits since
+# the last tag, tag that commit and release it. Nothing is committed to main (it is
+# protected by a ruleset), so the manifests carry no version: the tag is the version.
+# Bump rules live in scripts/next-version.sh. With no v* tag yet, v1.0.0 is the baseline.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: auto-tag-main
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    # workflow_dispatch can target any ref; only main is auto-released
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.push.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: next
+        run: |
+          if git describe --tags --abbrev=0 --match 'v*' >/dev/null 2>&1; then
+            scripts/next-version.sh
+          else
+            echo "tag=v1.0.0" >> "$GITHUB_OUTPUT"
+          fi
+      - id: push
+        if: steps.next.outputs.tag != ''
+        env:
+          TAG: ${{ steps.next.outputs.tag }}
+        run: |
+          # two close merges can compute the same tag: skip instead of failing the release
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "Skipped: $TAG already exists." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "refs/tags/$TAG"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+  release:
+    needs: tag
+    if: needs.tag.outputs.tag != ''
+    # a tag pushed with GITHUB_TOKEN does not trigger release.yml, so call it directly
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ needs.tag.outputs.tag }}
+    secrets: inherit

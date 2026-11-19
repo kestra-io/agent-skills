@@ -54,7 +54,7 @@ Install as a plugin so Claude Code keeps the skills up to date:
 
 Skills are namespaced as `kestra:<skill>` (for example `kestra:kestra-flow`). Run `/skills` to check they are listed.
 
-The plugin has no `version`, so every new commit on `main` is picked up as an update.
+The plugin has no `version` field, so every new commit on `main` is picked up as an update. See [Versions and releases](#versions-and-releases).
 
 ### OpenAI Codex
 
@@ -112,6 +112,16 @@ Check your tool's documentation for its user-wide skills folder. For a tool with
 | `npx skills` | `npx skills update` (add `-g` for user-wide installs) |
 | Claude Code plugin | `/plugin marketplace update kestra-agent-skills` |
 | Manual copy | `git pull` in your clone, then copy the folders again |
+
+## Versions and releases
+
+The repo is versioned as one unit with [SemVer](https://semver.org), tagged `vX.Y.Z` (see [Releases](https://github.com/kestra-io/agent-skills/releases)). A release is cut automatically on every merge to `main` that contains a releasable [conventional commit](https://www.conventionalcommits.org): `feat:` bumps the minor version, `fix:`, `refactor:`, `build:` and `chore(deps):` bump the patch, and a `BREAKING CHANGE:` footer bumps the major. `docs:`, `test:` and bare `chore:` do not release.
+
+The install commands above always follow `main`, not the tags, and the plugin manifests carry no version. The tags and releases give you a changelog and a stable point to pin to:
+
+```bash
+git clone --branch v1.0.0 https://github.com/kestra-io/agent-skills.git
+```
 
 ## Requirements
 
