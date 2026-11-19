@@ -5,10 +5,10 @@
 # Prints nothing and writes an empty value when the range warrants no release.
 #
 # Bump mapping, from each commit's SUBJECT line:
-#   <type>!: / BREAKING CHANGE: in the body    -> major
+#   BREAKING CHANGE: footer                    -> major
 #   feat:                                      -> minor
-#   fix: perf: build: refactor: chore(deps):   -> patch
-#   docs: test: chore: ci: style:              -> none
+#   fix: build: refactor: chore(deps):         -> patch
+#   docs: test: chore:                         -> none
 # The highest bump in the range wins. "[skip release]" on the head commit -- in its
 # subject, or alone on its own line -- forces none.
 #

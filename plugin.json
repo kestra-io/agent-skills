@@ -1,7 +1,6 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "kestra",
-  "version": "1.0.0",
   "description": "Write, harden, migrate and operate Kestra flows, grounded in the live Kestra plugin schema and docs.",
   "author": {
     "name": "Kestra",

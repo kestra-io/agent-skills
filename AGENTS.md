@@ -15,19 +15,15 @@ Rules for AI agents working in this repository.
 
 ## Releasing
 
-One SemVer for the whole repo, tagged `vX.Y.Z`. The tag must match the `version` in `plugin.json`, `.claude-plugin/plugin.json` and `.cursor-plugin/plugin.json`.
-
-- patch: wording or doc fix, small skill correction.
-- minor: new skill, or new behavior in an existing skill.
-- major: skill renamed or removed, or install layout changed.
-
-Releases are automatic. On every push to `main`, `.github/workflows/auto-tag.yml` computes the next version from the conventional commit subjects since the last tag (`scripts/next-version.sh`, highest bump wins), commits the new version into the three manifests, tags that commit and publishes a GitHub release. Slack is notified of the release or its failure.
+One SemVer for the whole repo, tagged `vX.Y.Z`. Releases are automatic: on every push to `main`, `.github/workflows/auto-tag.yml` computes the next version from the conventional commit subjects since the last tag (`scripts/next-version.sh`, highest bump wins), tags that commit and publishes a GitHub release. Slack is notified of the release or its failure. Nothing is committed to `main` and the manifests carry no version: the tag is the version.
 
 | commit | bump |
 | --- | --- |
-| `<type>!:` or `BREAKING CHANGE:` footer | major |
+| `BREAKING CHANGE:` footer | major |
 | `feat:` | minor |
-| `fix:` `perf:` `build:` `refactor:` `chore(deps):` | patch |
-| `docs:` `test:` `ci:` `style:` bare `chore:` | none |
+| `fix:` `refactor:` `build:` `chore(deps):` | patch |
+| `docs:` `test:` bare `chore:` | none |
 
-Put `[skip release]` in the head commit subject to skip a release. Do not edit the manifest versions by hand. Pushing a `v*` tag by hand still runs the release workflow.
+These are the types the `main` commit-message ruleset accepts. A bump means: patch for a wording or small skill fix, minor for a new skill or new behavior, major for a skill renamed or removed or a changed install layout.
+
+Put `[skip release]` in the head commit subject to skip a release. Pushing a `v*` tag by hand also runs the release workflow.
