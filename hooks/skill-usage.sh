@@ -10,9 +10,9 @@ is_true "$KESTRACTL_TELEMETRY_DISABLED" && exit 0
 command -v curl >/dev/null && command -v jq >/dev/null || exit 0
 
 root="${CLAUDE_PLUGIN_ROOT:-}"
-key="${KESTRA_SKILLS_POSTHOG_KEY:-__POSTHOG_KEY__}"
-host="${KESTRA_SKILLS_POSTHOG_HOST:-https://eu.i.posthog.com}"
-[ -n "$root" ] && [ "$key" != "__POSTHOG_KEY__" ] || exit 0
+key="${KESTRA_SKILLS_POSTHOG_KEY:-phc_8lNe3YuQj9gyJcCJOGy4RwMCUFzHQ7siGPr8aeodhxR}"
+host="${KESTRA_SKILLS_POSTHOG_HOST:-https://kestra.io/t}"
+[ -n "$root" ] || exit 0
 
 # Only our skills: the hook also fires for skills of other plugins.
 skill=$(jq -r '.tool_input.skill // empty' 2>/dev/null)
