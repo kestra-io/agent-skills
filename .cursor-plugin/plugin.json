@@ -8,6 +8,14 @@
   "homepage": "https://kestra.io",
   "repository": "https://github.com/kestra-io/agent-skills",
   "license": "Apache-2.0",
-  "keywords": ["kestra", "orchestration", "workflows", "data-engineering", "airflow-migration", "skills"],
-  "skills": "./skills"
+  "keywords": [
+    "kestra",
+    "orchestration",
+    "workflows",
+    "data-engineering",
+    "airflow-migration",
+    "skills"
+  ],
+  "skills": "./skills",
+  "mcpServers": "./.cursor-plugin/mcp.json"
 }
