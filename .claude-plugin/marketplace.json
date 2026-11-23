@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "kestra",
-      "description": "Kestra skills: kestra-flow, kestra-flow-hardening, kestra-ops, migrate-kestra-2, migrate-airflow-kestra.",
+      "description": "Kestra skills: kestra-flow, kestra-flow-hardening, kestra-ops, migrate-kestra-2, migrate-airflow-kestra, migrate-camunda-kestra.",
       "source": "./"
     }
   ]
