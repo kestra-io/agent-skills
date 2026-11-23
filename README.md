@@ -13,6 +13,7 @@ Every skill is a folder with a `SKILL.md` file in the open [Agent Skills](https:
 | [`kestra-ops`](skills/kestra-ops/SKILL.md) | Deploy flows, run executions, manage namespaces and files with `kestractl` |
 | [`migrate-kestra-2`](skills/migrate-kestra-2/SKILL.md) | Upgrade an instance and its flows from Kestra 1.3 to 2.0 |
 | [`migrate-airflow-kestra`](skills/migrate-airflow-kestra/SKILL.md) | Convert an Airflow DAG into a Kestra flow |
+| [`migrate-camunda-kestra`](skills/migrate-camunda-kestra/SKILL.md) | Convert a Camunda 8 BPMN process into a Kestra flow |
 
 ## Install
 
@@ -71,7 +72,7 @@ The repo root is also an [Agent Plugins](https://agent-plugins.org) package: `pl
 
 | Skill | ChatGPT |
 |---|---|
-| `kestra-flow`, `kestra-flow-hardening`, `migrate-airflow-kestra` | Yes, needs web access |
+| `kestra-flow`, `kestra-flow-hardening`, `migrate-airflow-kestra`, `migrate-camunda-kestra` | Yes, needs web access |
 | `migrate-kestra-2` | Guidance only (no shell) |
 | `kestra-ops` | No, needs `kestractl` and a shell |
 
@@ -139,7 +140,7 @@ Opt out of the `kestractl` tag and the hook with `KESTRACTL_TELEMETRY_DISABLED=t
 
 | Skill | Needs |
 |---|---|
-| `kestra-flow` | The Kestra docs MCP server (`https://api.kestra.io/v1/mcp`, declared in `.mcp.json`, `mcp.json` and `.cursor-plugin/mcp.json`). Skills-only installs (`npx skills add`, Claude.ai zip, manual copy) do not get it: add that server to your tool yourself. No Kestra instance needed. |
+| `kestra-flow`, `migrate-camunda-kestra` | The Kestra docs MCP server (`https://api.kestra.io/v1/mcp`, declared in `.mcp.json`, `mcp.json` and `.cursor-plugin/mcp.json`). Skills-only installs (`npx skills add`, Claude.ai zip, manual copy) do not get it: add that server to your tool yourself. No Kestra instance needed. |
 | `kestra-flow-hardening`, `migrate-airflow-kestra` | `curl` and access to `https://api.kestra.io`. No Kestra instance needed. |
 | `kestra-ops` | [`kestractl`](https://kestra.io/docs), network access to your Kestra API, a tenant and token |
 | `migrate-kestra-2` | Access to your instance; uses `kestra-migrate` and `kestractl` when available |
@@ -166,6 +167,10 @@ Is my instance ready for Kestra 2.0?
 
 ```text
 Use migrate-airflow-kestra to migrate dags/ingest_pipeline.py from Airflow to Kestra, output to kestra/.
+```
+
+```text
+Use migrate-camunda-kestra to migrate processes/order.bpmn from Camunda to Kestra, output to kestra/.
 ```
 
 ## Skills in detail
@@ -217,6 +222,16 @@ Migrate an Apache Airflow DAG to a production-ready Kestra flow.
 - Extracts Python business logic into namespace files
 - Maps XCom to `outputFiles`/`inputFiles`
 - Validates against the live schema
+
+### migrate-camunda-kestra
+
+Migrate a Camunda 8 BPMN 2.0 process to a Kestra flow.
+
+- Maps gateways, service and script tasks, call activities, timer, message and error events
+- Translates FEEL expressions to Pebble and timer cycles to cron
+- Flags user tasks, compensation and other constructs with no clean equivalent instead of dropping them
+- Writes a `MIGRATION.md` report; in-flight Camunda instances are not migrated
+- Validates against the Kestra docs MCP server
 
 ## Contributing
 

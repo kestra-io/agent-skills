@@ -20,7 +20,12 @@ Snyk audits every skill (see skills.sh). Keep these rules to avoid its findings:
 
 - The agent that opens a PR for a new issue must run a QA before asking for review, and post the report as a PR comment.
 - Test the PR on every compatible harness (Claude Code, Cursor, Codex, and any other tool the repo supports), each from a real install of the branch, not only from a local `--plugin-dir` or `--mcp-config` shortcut.
-- If the QA needs a running Kestra (for example to test `kestractl` or the instance schema), start it with [plugin-devtools](https://github.com/kestra-io/plugin-devtools) (`~/dev/plugin-devtools`): `kestra-core-run` (OSS) or `kestra-core-run --docker`. Stop it with `kestra-core-run stop`.
+- A skill that generates flows, uses the instance schema, or calls `kestractl` is QA'd against a running Kestra. "No schema source" or "MCP not reachable" is not an acceptable QA result: start an instance and rerun. Skills that never touch a Kestra (pure guidance) may skip it, say so in the report.
+- Start it with [plugin-devtools](https://github.com/kestra-io/plugin-devtools) (`~/dev/plugin-devtools`): `kestra-core-run --docker` (OSS, fastest) or `kestra-core-run`. Stop it with `kestra-core-run stop`.
+  - Read the port from the script output (it can be 8085, not 8080).
+  - If the API answers 401 after a `--docker` start, the admin user was not created. Create it with the call the script makes: `POST /api/v1/main/basicAuth` with a `uid`, `admin@kestra.io` and the dev password it prints.
+  - Pass credentials to the agent under test through a `chmod 600` netrc file (`curl --netrc-file`), never as a literal CLI argument (see Security). Sandboxed agents refuse commands that expand env vars.
+- For a flow-generating skill, the runtime check is: generate, validate on the instance, deploy, run an execution, and report the states. Failures caused by the sample input (fake URLs) are fine if you say so.
 - The report lists, per harness: version, install result, skill loading, and a runtime check. State what was not tested. Report failures as they are.
 
 ## Releasing
