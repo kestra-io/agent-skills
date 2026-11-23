@@ -58,7 +58,11 @@ Never drop a node silently. Every node ends up in a flow task, a `# TODO(migrati
 
 ### Step 3: Load and validate schemas
 
-If the user has a Kestra instance, prefer its own schema (`GET <host>/api/v1/plugins/schemas/flow`, tenant-less path). It matches the installed plugins.
+If the user has a Kestra instance, prefer it: it matches the installed plugins.
+
+- Schema: `GET <host>/api/v1/plugins/schemas/flow` (tenant-less path). It is large, extract only the definitions you need.
+- Validation: `POST <host>/api/v1/flows/validate` with `Content-Type: application/x-yaml` and the flow as body. Validate every generated flow, the called ones too.
+- Credentials: read them from the environment or a `chmod 600` netrc file (`curl --netrc-file`). Never put a token or password as a literal argument, and never write it to the output files or the report.
 
 Otherwise use the Kestra docs MCP server (`https://api.kestra.io/v1/mcp`). Never download the full flow schema, it is about 16 MB:
 
