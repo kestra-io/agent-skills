@@ -43,11 +43,20 @@ Resolve config from highest to lowest precedence:
 3. Config file (`~/.kestractl/config.yaml`)
 4. Built-in defaults
 
-Common setup:
+Preferred setup: environment variables, nothing written to disk or to the command line.
 
 ```bash
-kestractl config add dev http://localhost:8080 main --token DEV_TOKEN
-kestractl config add prod https://prod.kestra.io production --token PROD_TOKEN
+export KESTRACTL_HOST=https://prod.kestra.io
+export KESTRACTL_TENANT=production
+export KESTRACTL_TOKEN=...   # set in your shell or secret manager, never typed in a command
+```
+
+Alternative: a saved context. Pass the secret as a variable, not a literal, and restrict the file:
+
+```bash
+kestractl config add dev http://localhost:8080 main --token "$DEV_TOKEN"
+kestractl config add prod https://prod.kestra.io production --token "$PROD_TOKEN"
+chmod 600 ~/.kestractl/config.yaml
 kestractl config use dev
 kestractl config show
 ```
@@ -97,6 +106,8 @@ kestractl nsfiles delete my.namespace workflows --recursive
 
 ## Guardrails
 
+- Never put a real token or password as a literal CLI argument (`--token`, `--password`). It lands in shell history and the process list. Use env vars or a `$VAR`.
+- Never echo a token into a generated command, log, or report.
 - Confirm production context before write operations (`deploy`, `upload`, `delete`).
 - Prefer `flows validate` before `flows deploy`.
 - Use `--output json` for scripting and automation reliability.
