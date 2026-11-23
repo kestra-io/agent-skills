@@ -123,11 +123,23 @@ The install commands above always follow `main`, not the tags, and the plugin ma
 git clone --branch v1.0.0 https://github.com/kestra-io/agent-skills.git
 ```
 
+## Telemetry
+
+Three anonymous signals measure skill adoption. All are metadata only: no prompt, flow, file or credential content is sent.
+
+| Signal | When | What is sent |
+|---|---|---|
+| `kestractl` tag | A skill runs `kestractl` | The skill prefixes the call with `KESTRACTL_SKILL_SOURCE=<skill>`; kestractl adds it as `skill_source` to its `cli_command_executed` event |
+| MCP header | The plugin calls the Kestra docs MCP server | Header `X-Kestra-Plugin: agent-skills/<harness>` on each request. Plugin installs only |
+| Claude Code hook | A skill of this plugin loads | `agent_skill_invoked` PostHog event: skill name, plugin ref, os/arch, random anonymous id |
+
+Opt out of the `kestractl` tag and the hook with `KESTRACTL_TELEMETRY_DISABLED=true`. Opt out of the hook only with `KESTRA_SKILLS_TELEMETRY_DISABLED=true`. The header cannot be disabled by a variable: remove the `headers` entry from `.mcp.json` (Claude Code), `mcp.json` (Codex, Agent Plugins) or `.cursor-plugin/mcp.json` (Cursor) in your install, or add the MCP server yourself.
+
 ## Requirements
 
 | Skill | Needs |
 |---|---|
-| `kestra-flow` | The Kestra docs MCP server (`https://api.kestra.io/v1/mcp`, declared in `mcp.json` and `.mcp.json`). Skills-only installs (`npx skills add`, Claude.ai zip, manual copy) do not get it: add that server to your tool yourself. No Kestra instance needed. |
+| `kestra-flow` | The Kestra docs MCP server (`https://api.kestra.io/v1/mcp`, declared in `.mcp.json`, `mcp.json` and `.cursor-plugin/mcp.json`). Skills-only installs (`npx skills add`, Claude.ai zip, manual copy) do not get it: add that server to your tool yourself. No Kestra instance needed. |
 | `kestra-flow-hardening`, `migrate-airflow-kestra` | `curl` and access to `https://api.kestra.io`. No Kestra instance needed. |
 | `kestra-ops` | [`kestractl`](https://kestra.io/docs), network access to your Kestra API, a tenant and token |
 | `migrate-kestra-2` | Access to your instance; uses `kestra-migrate` and `kestractl` when available |

@@ -35,6 +35,8 @@ npx skills add kestra-io/agent-skills@migrate-kestra-2
 - Access token and tenant are available
 - A valid context exists in `~/.kestractl/config.yaml` or values are provided via env vars/flags
 
+Prefix every `kestractl` call with `KESTRACTL_SKILL_SOURCE=${KESTRACTL_SKILL_SOURCE:-kestra-ops}`, for example `KESTRACTL_SKILL_SOURCE=kestra-ops kestractl flows list`. Each shell call is fresh, so an `export` would be lost, and it would tag the user's own later commands. If another skill delegated to you (for example `migrate-airflow-kestra`), use that skill's name instead of `kestra-ops`. The variable only tags kestractl telemetry (see the README `Telemetry` section). The examples below omit it for brevity.
+
 ## Configuration precedence
 
 Resolve config from highest to lowest precedence:

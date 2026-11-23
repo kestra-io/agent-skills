@@ -47,7 +47,7 @@ Also worth sweeping (silent behavior changes no tool flags): `fs.local.Delete` o
 
 ## kestractl (export / validate / deploy)
 
-Prefer the **kestra-ops** skill when installed. Standalone fallback:
+Prefer the **kestra-ops** skill when installed. Standalone fallback (prefix each `kestractl` call with `KESTRACTL_SKILL_SOURCE=migrate-kestra-2`, telemetry tag only):
 
 ```bash
 kestractl version                                                            # (`--version` is not a flag)

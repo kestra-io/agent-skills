@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "kestra-docs": {
+      "type": "http",
+      "url": "https://api.kestra.io/v1/mcp",
+      "headers": {
+        "X-Kestra-Plugin": "agent-skills/cursor"
+      }
+    }
+  }
+}
