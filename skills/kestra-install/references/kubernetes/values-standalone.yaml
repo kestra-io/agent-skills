@@ -1,0 +1,33 @@
+# One pod runs every role. Production chart (kestra/kestra): bring your own Postgres and storage.
+# Secrets: reference a Kubernetes Secret via configurations.secrets, never commit a password here.
+deployments:
+  standalone:
+    enabled: true
+
+configurations:
+  application:
+    kestra:
+      repository:
+        type: postgres
+      queue:
+        type: postgres
+      storage:
+        type: gcs   # or s3, azure. See backend-config.md. For local: type: local plus local.basePath (pod storage is lost on restart)
+      url: https://kestra.example.com/
+  secrets:
+    - name: kestra-db          # Secret holding the datasource block, see below
+      key: datasource.yml
+
+# kubectl create secret generic kestra-db --from-file=datasource.yml=./datasource.yml
+# datasource.yml (chmod 600, never committed):
+#   datasources:
+#     postgres:
+#       url: jdbc:postgresql://<host>:5432/kestra
+#       driverClassName: org.postgresql.Driver
+#       username: kestra
+#       password: <from your secret manager>
+#   kestra:
+#     server:
+#       basic-auth:          # OSS only, required. EE: remove, create the admin in the UI setup
+#         username: <admin email>
+#         password: <generated password>
