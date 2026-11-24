@@ -1,0 +1,80 @@
+# EE only (Redis queue is Enterprise, OSS fails at startup with a missing queue bean). Postgres repository plus Redis queue. Needs a license, see ../ee.md. Not run against a license: check keys against the docs.
+# Usage: cp jdbc-postgres-redis.env.example .env && chmod 600 .env && docker compose -f jdbc-postgres-redis.yml up -d
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: kestra
+      POSTGRES_USER: kestra
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d kestra -U kestra"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?set in .env}"]
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a $$REDIS_PASSWORD ping || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+  kestra:
+    image: kestra/kestra:${KESTRA_VERSION:?set in .env}
+    command: server standalone
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "${KESTRA_HTTP_PORT:-8080}:8080"
+      - "${KESTRA_MANAGEMENT_PORT:-8081}:8081"
+    user: "root"
+    volumes:
+      - kestra-data:/app/storage
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/kestra-wd:/tmp/kestra-wd
+    environment:
+      KESTRA_CONFIGURATION: |
+        datasources:
+          postgres:
+            url: jdbc:postgresql://postgres:5432/kestra
+            driverClassName: org.postgresql.Driver
+            username: kestra
+            password: ${POSTGRES_PASSWORD}
+        kestra:
+          ee:
+            license:
+              id: ${KESTRA_EE_LICENSE_ID:?set in .env}
+              fingerprint: ${KESTRA_EE_LICENSE_FINGERPRINT:?set in .env}
+              key: ${KESTRA_EE_LICENSE_KEY:?set in .env}
+          server:
+            basicAuth:
+              username: ${KESTRA_ADMIN_EMAIL:?set in .env}
+              password: ${KESTRA_ADMIN_PASSWORD:?set in .env}
+          repository:
+            type: postgres
+          queue:
+            type: redis
+            redis:
+              uri: redis://:${REDIS_PASSWORD}@redis:6379
+          storage:
+            type: local
+            local:
+              basePath: /app/storage
+          tasks:
+            tmpDir:
+              path: /tmp/kestra-wd/tmp
+          url: http://localhost:8080/
+
+volumes:
+  postgres-data:
+  kestra-data:

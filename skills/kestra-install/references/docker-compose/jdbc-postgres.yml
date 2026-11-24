@@ -1,0 +1,60 @@
+# Fewest moving parts. Postgres is repository and queue. OSS and EE.
+# Usage: cp jdbc-postgres.env.example .env && chmod 600 .env && docker compose -f jdbc-postgres.yml up -d
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: kestra
+      POSTGRES_USER: kestra
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d kestra -U kestra"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  kestra:
+    image: kestra/kestra:${KESTRA_VERSION:?set in .env}
+    command: server standalone
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${KESTRA_HTTP_PORT:-8080}:8080"
+      - "${KESTRA_MANAGEMENT_PORT:-8081}:8081"
+    user: "root"
+    volumes:
+      - kestra-data:/app/storage
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/kestra-wd:/tmp/kestra-wd
+    environment:
+      KESTRA_CONFIGURATION: |
+        datasources:
+          postgres:
+            url: jdbc:postgresql://postgres:5432/kestra
+            driverClassName: org.postgresql.Driver
+            username: kestra
+            password: ${POSTGRES_PASSWORD}
+        kestra:
+          server:
+            basicAuth:
+              username: ${KESTRA_ADMIN_EMAIL:?set in .env}
+              password: ${KESTRA_ADMIN_PASSWORD:?set in .env}
+          repository:
+            type: postgres
+          queue:
+            type: postgres
+          storage:
+            type: local
+            local:
+              basePath: /app/storage
+          tasks:
+            tmpDir:
+              path: /tmp/kestra-wd/tmp
+          url: http://localhost:8080/
+
+volumes:
+  postgres-data:
+  kestra-data:

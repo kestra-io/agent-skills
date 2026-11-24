@@ -1,0 +1,20 @@
+[Unit]
+Description=Kestra
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+User=kestra
+Group=kestra
+WorkingDirectory=/opt/kestra
+# Secrets live in this file (chmod 600, owned by root or kestra), never in the unit.
+EnvironmentFile=/etc/kestra/kestra.env
+Environment="JAVA_OPTS=-Xms1g -Xmx2g"
+ExecStart=/usr/bin/java $JAVA_OPTS -jar /opt/kestra/kestra.jar server standalone --config /etc/kestra/application.yaml
+Restart=on-failure
+RestartSec=10
+SuccessExitStatus=143
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

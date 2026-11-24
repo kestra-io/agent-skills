@@ -1,0 +1,111 @@
+# EE only. Elasticsearch repository plus Kafka queue, for high throughput. Needs a license, see ../ee.md. Check keys against the docs for your version.
+# Usage: cp elasticsearch-kafka.env.example .env && chmod 600 .env && docker compose -f elasticsearch-kafka.yml up -d
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: kestra
+      POSTGRES_USER: kestra
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d kestra -U kestra"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.0
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: -Xms1g -Xmx1g
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  kafka:
+    image: apache/kafka:3.9.0
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+
+  kestra:
+    image: kestra/kestra:${KESTRA_VERSION:?set in .env}
+    command: server standalone
+    depends_on:
+      postgres:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    ports:
+      - "${KESTRA_HTTP_PORT:-8080}:8080"
+      - "${KESTRA_MANAGEMENT_PORT:-8081}:8081"
+    user: "root"
+    volumes:
+      - kestra-data:/app/storage
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/kestra-wd:/tmp/kestra-wd
+    environment:
+      KESTRA_CONFIGURATION: |
+        datasources:
+          postgres:
+            url: jdbc:postgresql://postgres:5432/kestra
+            driverClassName: org.postgresql.Driver
+            username: kestra
+            password: ${POSTGRES_PASSWORD}
+        kestra:
+          ee:
+            license:
+              id: ${KESTRA_EE_LICENSE_ID:?set in .env}
+              fingerprint: ${KESTRA_EE_LICENSE_FINGERPRINT:?set in .env}
+              key: ${KESTRA_EE_LICENSE_KEY:?set in .env}
+          server:
+            basicAuth:
+              username: ${KESTRA_ADMIN_EMAIL:?set in .env}
+              password: ${KESTRA_ADMIN_PASSWORD:?set in .env}
+          repository:
+            type: elasticsearch
+          elasticsearch:
+            client:
+              http-hosts: http://elasticsearch:9200
+          queue:
+            type: kafka
+          kafka:
+            client:
+              properties:
+                bootstrap.servers: kafka:9092
+          storage:
+            type: local
+            local:
+              basePath: /app/storage
+          tasks:
+            tmpDir:
+              path: /tmp/kestra-wd/tmp
+          url: http://localhost:8080/
+
+volumes:
+  es-data:
+  kafka-data:
+  postgres-data:
+  kestra-data:

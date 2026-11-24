@@ -1,0 +1,39 @@
+# Roles run as separate deployments, scaled independently.
+# Same backend and secret wiring as values-standalone.yaml.
+deployments:
+  standalone:
+    enabled: false
+  webserver:
+    enabled: true
+  executor:
+    enabled: true
+  indexer:
+    enabled: true
+  scheduler:
+    enabled: true
+  controller:
+    enabled: true      # Kestra 2.0: workers connect to it over gRPC (port 50051). Required without standalone
+  worker:
+    enabled: true
+    workerThreads: 0   # 0 = auto from CPU
+
+configurations:
+  application:
+    kestra:
+      worker:
+        controllers:            # the chart does not set this: detached workers need it
+          type: STATIC
+          static:
+            endpoints:
+              - host: kestra-controller   # <fullname>-controller. Release name contains "kestra": <release>-controller. Else <release>-kestra-controller. Check: kubectl get svc
+                port: 50051
+      repository:
+        type: postgres
+      queue:
+        type: postgres
+      storage:
+        type: gcs   # see values-standalone.yaml for alternatives
+      url: https://kestra.example.com/
+  secrets:
+    - name: kestra-db
+      key: datasource.yml
