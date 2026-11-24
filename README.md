@@ -11,6 +11,7 @@ Every skill is a folder with a `SKILL.md` file in the open [Agent Skills](https:
 | [`kestra-flow`](skills/kestra-flow/SKILL.md) | Generate, modify, or debug flow YAML against the live flow schema |
 | [`kestra-flow-hardening`](skills/kestra-flow-hardening/SKILL.md) | Audit flows and add retries, timeouts, concurrency, SLAs, idempotency guards |
 | [`kestra-ops`](skills/kestra-ops/SKILL.md) | Deploy flows, run executions, manage namespaces and files with `kestractl` |
+| [`kestra-install`](skills/kestra-install/SKILL.md) | Provision a Kestra server on a host, Docker Compose or Kubernetes, then hand off to `kestra-ops` |
 | [`migrate-kestra-2`](skills/migrate-kestra-2/SKILL.md) | Upgrade an instance and its flows from Kestra 1.3 to 2.0 |
 | [`migrate-airflow-kestra`](skills/migrate-airflow-kestra/SKILL.md) | Convert an Airflow DAG into a Kestra flow |
 
@@ -73,7 +74,7 @@ The repo root is also an [Agent Plugins](https://agent-plugins.org) package: `pl
 |---|---|
 | `kestra-flow`, `kestra-flow-hardening`, `migrate-airflow-kestra` | Yes, needs web access |
 | `migrate-kestra-2` | Guidance only (no shell) |
-| `kestra-ops` | No, needs `kestractl` and a shell |
+| `kestra-ops`, `kestra-install` | No, need a shell (`kestractl`, Docker, kubectl, helm) |
 
 ### Cursor
 
@@ -142,6 +143,7 @@ Opt out of the `kestractl` tag and the hook with `KESTRACTL_TELEMETRY_DISABLED=t
 | `kestra-flow` | The Kestra docs MCP server (`https://api.kestra.io/v1/mcp`, declared in `.mcp.json`, `mcp.json` and `.cursor-plugin/mcp.json`). Skills-only installs (`npx skills add`, Claude.ai zip, manual copy) do not get it: add that server to your tool yourself. No Kestra instance needed. |
 | `kestra-flow-hardening`, `migrate-airflow-kestra` | `curl` and access to `https://api.kestra.io`. No Kestra instance needed. |
 | `kestra-ops` | [`kestractl`](https://kestra.io/docs), network access to your Kestra API, a tenant and token |
+| `kestra-install` | A shell on the target, plus Docker, `kubectl` and `helm`, or Java 21+, depending on the target. `kestractl` for plugins, health smoke test and bootstrap |
 | `migrate-kestra-2` | Access to your instance; uses `kestra-migrate` and `kestractl` when available |
 
 ## Usage
@@ -197,6 +199,16 @@ Operate Kestra with `kestractl`.
 - Inspection (`flows list/get`, `executions get`, `namespaces list`)
 - Safe writes (`flows deploy`, `nsfiles upload/delete`)
 - Guardrails for production and automation output
+
+### kestra-install
+
+Provision and configure a self-hosted Kestra server.
+
+- Standalone host (JVM and systemd), Docker Compose (four backend recipes) or Kubernetes (official Helm chart)
+- One backend config generator, delivered per target, with plugins provisioned by `kestractl`
+- EE license handling without plaintext secrets
+- Health checks and a `kestractl` smoke test, mechanical upgrades, first-run hardening
+- Ends with a handoff to `kestra-ops`
 
 ### migrate-kestra-2
 
