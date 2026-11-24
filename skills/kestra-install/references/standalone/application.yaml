@@ -1,0 +1,23 @@
+# Minimal standalone config: Postgres repository and queue, local file storage.
+# ${...} values come from the environment (EnvironmentFile in the systemd unit).
+datasources:
+  postgres:
+    url: jdbc:postgresql://localhost:5432/kestra
+    driverClassName: org.postgresql.Driver
+    username: kestra
+    password: ${KESTRA_DB_PASSWORD}
+kestra:
+  server:
+    # OSS requires basic auth. EE: remove this block and create the first admin in the UI setup.
+    basic-auth:
+      username: ${KESTRA_ADMIN_EMAIL}
+      password: ${KESTRA_ADMIN_PASSWORD}
+  repository:
+    type: postgres
+  queue:
+    type: postgres
+  storage:
+    type: local
+    local:
+      basePath: /var/lib/kestra/storage
+  url: http://localhost:8080/
